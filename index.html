@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Philippine Railway Company: Panay Line 1920 (Engineer's Edition)</title>
+    <title>Philippine Railway Company: Panay Line 1920 (Complete Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -233,6 +233,32 @@
         </div>
     </section>
 
+    <!-- Fare Calculator (RESTORED) -->
+    <section class="bg-[#2d2a26] py-12 text-[#f4f1ea]">
+        <div class="container mx-auto px-4 text-center max-w-2xl">
+            <h2 class="text-2xl font-bold serif-font text-[#c2410c] mb-6">Ticket Office</h2>
+            <div class="bg-[#3a3632] p-6 rounded shadow-lg border border-[#57534e]">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="text-left">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Origin</label>
+                        <select id="calc-origin" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select>
+                    </div>
+                    <div class="text-left">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Destination</label>
+                        <select id="calc-dest" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select>
+                    </div>
+                </div>
+                <button id="calc-btn" class="w-full bg-[#c2410c] hover:bg-[#a1350a] text-white font-bold py-3 uppercase tracking-widest text-sm rounded shadow transition-all">
+                    Purchase Ticket (3rd Class)
+                </button>
+                <div id="fare-output" class="mt-6 hidden pt-4 border-t border-dashed border-gray-600">
+                    <div class="text-4xl font-bold serif-font text-[#facc15]"><span id="fare-val">0.00</span> PHP</div>
+                    <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-wide">Rate: 0.03 PHP/km • Valid for one passage</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer class="bg-[#1c1917] text-[#57534e] py-8 text-center text-xs">
         <p>Digitally Reconstructed from PRC Annual Reports & Engineering Audits (1920)</p>
     </footer>
@@ -306,7 +332,6 @@
         function updateButtons(active, inactive) {
             active.className = "px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#2d2a26] text-white border border-[#2d2a26] rounded-l-lg hover:bg-[#444] rounded-r-lg";
             inactive.className = "px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#e5e0d6] text-[#2d2a26] border border-[#a8a29e] rounded-l-lg hover:bg-[#d6d3d1] rounded-r-lg";
-            // Simple logic to keep rounded corners nice (simplification for single file)
             if(active.id === 'btn-inspector') { active.classList.remove('rounded-r-lg'); inactive.classList.remove('rounded-l-lg'); }
             else { active.classList.remove('rounded-l-lg'); inactive.classList.remove('rounded-r-lg'); }
         }
@@ -344,7 +369,7 @@
             document.getElementById('dt-desc').innerText = s.notes;
             document.getElementById('dt-type').innerText = s.type;
             document.getElementById('dt-siding').innerText = s.siding;
-            document.getElementById('dt-status').innerText = s.type; // Reuse type for status class
+            document.getElementById('dt-status').innerText = s.type; 
 
             const facList = document.getElementById('dt-facilities');
             facList.innerHTML = '';
@@ -360,7 +385,7 @@
             }
         }
 
-        // --- TIMETABLE ENGINE (With Water Stops) ---
+        // --- TIMETABLE ENGINE ---
         function generateTimetable() {
             const tbody = document.getElementById('timetable-body');
             tbody.innerHTML = '';
@@ -369,81 +394,44 @@
             const START_SB = 7 * 60;
             const SPEED_FLAT = 2.45;
             const SPEED_GRADE = 2.8;
-            
-            // Major Event Points
             const PASSI_KM = 54.1;
-            const MEET_DURATION = 20; 
-            // Calculated Passi Arrival is ~9:12. Departure fixed at 9:45 for meet.
             const MEET_DEPARTURE = 585; 
-
-            // Water Stop Dwell (mins)
             const WATER_DWELL = 7;
             const waterStops = ["Pototan", "Dumarao"];
 
-            // Running Counters
-            let nb_curr = START_NB;
-            let sb_curr = START_SB;
-
-            // We need to pre-calculate the array because Siding waits depend on fixed geometry, 
-            // but Water Stops are cumulative delays.
-            
-            // Let's create a simplified model:
-            // 1. Calculate pure travel times between stations.
-            // 2. Add dwell times at stations.
-            // 3. Force sync at Passi.
-
-            // First, map stations to travel segments
             let nb_schedule = [];
-            let sb_schedule = [];
-            
-            // --- NB Calculation ---
+            let sb_times_map = {};
+
             let t_nb = START_NB;
             for(let i=0; i<stations.length; i++) {
                 const s = stations[i];
-                // Add Travel Time from previous
                 if(i > 0) {
                     const dist = s.km - stations[i-1].km;
                     const speed = (s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT;
                     t_nb += (dist * speed);
                 }
-                
-                // Add Water Dwell (if arriving at water stop)
                 if(waterStops.includes(s.name)) t_nb += WATER_DWELL;
-
-                // Sync at Passi (Meet)
                 if(s.name === "Passi") {
-                    // Force hold until Meet Departure
                     if(t_nb < MEET_DEPARTURE) t_nb = MEET_DEPARTURE; 
                 }
-
                 nb_schedule.push(t_nb);
             }
 
-            // --- SB Calculation (Reverse) ---
-            // Start at Capiz
             let t_sb = START_SB;
-            let sb_times_map = {}; // Map station index to time
-            
-            // Iterate backwards from Capiz(last) to Iloilo(0)
             for(let i=stations.length-1; i>=0; i--) {
                 const s = stations[i];
-                // Add travel time from previous (which was geographically north)
                 if(i < stations.length-1) {
                     const dist = stations[i+1].km - s.km;
                     const speed = (s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT;
                     t_sb += (dist * speed);
                 }
-
                 if(waterStops.includes(s.name)) t_sb += WATER_DWELL;
-
                 if(s.name === "Passi") {
                     if(t_sb < MEET_DEPARTURE) t_sb = MEET_DEPARTURE;
                 }
-                
                 sb_times_map[i] = t_sb;
             }
 
-            // --- Render ---
             stations.forEach((s, i) => {
                 const tr = document.createElement('tr');
                 const isWater = waterStops.includes(s.name);
@@ -494,7 +482,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: true } } }
             });
 
-            // Facility Chart
             const facCounts = { Water: 0, Siding: 0, Hub: 0 };
             stations.forEach(s => {
                 if(s.facilities.some(f => f.includes('Water'))) facCounts.Water++;
@@ -515,12 +502,44 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
+        
+        // --- CALCULATOR LOGIC (RESTORED) ---
+        function initCalculator() {
+            const origin = document.getElementById('calc-origin');
+            const dest = document.getElementById('calc-dest');
+            
+            stations.forEach((s, i) => {
+                origin.add(new Option(s.name, i));
+                dest.add(new Option(s.name, i));
+            });
+            
+            // Set defaults to ends of the line
+            dest.value = stations.length - 1; 
+
+            document.getElementById('calc-btn').addEventListener('click', () => {
+                const i1 = parseInt(origin.value);
+                const i2 = parseInt(dest.value);
+                
+                const s1 = stations[i1];
+                const s2 = stations[i2];
+                
+                const dist = Math.abs(s1.km - s2.km);
+                const fare = (dist * 0.03).toFixed(2);
+                
+                const resultBox = document.getElementById('fare-output');
+                const fareVal = document.getElementById('fare-val');
+                
+                fareVal.innerText = fare;
+                resultBox.classList.remove('hidden');
+            });
+        }
 
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             renderStationList();
             generateTimetable();
             initCharts();
+            initCalculator();
         });
     </script>
 </body>
