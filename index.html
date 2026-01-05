@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Philippine Railway Company: Panay Line 1920 (Fixed)</title>
+    <title>Philippine Railway Company: Panay Line 1920 (Engineer's Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -28,7 +28,6 @@
             background: repeating-linear-gradient(to bottom, #4a453e, #4a453e 8px, transparent 8px, transparent 16px);
             width: 4px;
         }
-        .chart-wrapper { position: relative; width: 100%; height: 350px; }
         .vintage-border {
             border: 1px solid #d1ccc0;
             box-shadow: 6px 6px 0px rgba(45, 42, 38, 0.1);
@@ -44,8 +43,11 @@
         .timetable-row { border-bottom: 1px solid #e5e0d6; }
         .timetable-row:nth-child(even) { background-color: #f9f7f2; }
         .timetable-row:hover { background-color: #ffedd5; }
+        
+        /* Special Rows */
+        .water-stop-row { background-color: #eff6ff !important; } /* Light blue for water */
         .crossing-highlight {
-            background-color: #fff7ed;
+            background-color: #fff7ed !important;
             border-top: 2px dashed #c2410c;
             border-bottom: 2px dashed #c2410c;
         }
@@ -53,6 +55,14 @@
         /* Animation */
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Blueprint Grid Background */
+        .blueprint-bg {
+            background-color: #2e3642;
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -61,22 +71,24 @@
     <header class="bg-[#2d2a26] text-[#f4f1ea] py-6 border-b-4 border-[#c2410c] shadow-lg z-20 relative">
         <div class="container mx-auto px-4 text-center">
             <h1 class="text-3xl md:text-5xl font-bold tracking-widest uppercase mb-2">Philippine Railway Co.</h1>
-            <p class="serif-font text-lg md:text-xl text-[#d1ccc0] italic">Panay Division • 1920 Official Timetable</p>
+            <p class="serif-font text-lg md:text-xl text-[#d1ccc0] italic">Panay Division • Infrastructure & Operations Audit (1920)</p>
         </div>
     </header>
 
     <!-- Controls -->
     <section class="bg-[#e5e0d6] py-6 shadow-inner relative z-10">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-800 mb-4 max-w-3xl mx-auto">
-                Navigate the <strong>33 Stations</strong> of the historical line or switch to the <strong>Working Timetable</strong> to see the daily train movements and mandatory crossing points.
+            <p class="text-gray-800 mb-4 max-w-4xl mx-auto text-sm md:text-base">
+                Explore the <strong>33-station network</strong>. Updated with Annual Report data: 
+                <span class="font-bold text-[#c2410c]">Sub-terminals</span> at Pototan, Passi, and Dumarao include Wyes, Ash Pits, and Water Tanks. 
+                <span class="font-bold text-blue-800">Water Stops</span> and <span class="font-bold text-[#c2410c]">Passing Sidings</span> (every ~7 miles) are now integrated into the timetable.
             </p>
             <div class="inline-flex rounded-md shadow-sm" role="group">
-                <button onclick="switchView('inspector')" id="btn-inspector" class="px-6 py-2 text-sm font-bold uppercase tracking-widest bg-[#2d2a26] text-white border border-[#2d2a26] rounded-l-lg hover:bg-[#444]">
+                <button onclick="switchView('inspector')" id="btn-inspector" class="px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#2d2a26] text-white border border-[#2d2a26] rounded-l-lg hover:bg-[#444]">
                     Station Inspector
                 </button>
-                <button onclick="switchView('timetable')" id="btn-timetable" class="px-6 py-2 text-sm font-bold uppercase tracking-widest bg-[#e5e0d6] text-[#2d2a26] border border-[#a8a29e] rounded-r-lg hover:bg-[#d6d3d1]">
-                    Daily Timetable
+                <button onclick="switchView('timetable')" id="btn-timetable" class="px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#e5e0d6] text-[#2d2a26] border border-[#a8a29e] rounded-r-lg hover:bg-[#d6d3d1]">
+                    Master Timetable
                 </button>
             </div>
         </div>
@@ -89,7 +101,7 @@
             <!-- LEFT: Navigation List -->
             <div class="lg:col-span-4 h-full flex flex-col vintage-border overflow-hidden bg-white">
                 <div class="bg-[#d6d3d1] p-3 border-b border-[#a8a29e] flex justify-between items-center">
-                    <h3 class="font-bold text-[#2d2a26] uppercase text-xs tracking-wide">Station Manifest</h3>
+                    <h3 class="font-bold text-[#2d2a26] uppercase text-xs tracking-wide">Route Manifest</h3>
                     <span class="text-[10px] font-bold text-gray-500">KM 0.0 ➝ KM 116.6</span>
                 </div>
                 <div class="overflow-y-auto vintage-scroll flex-grow relative p-4 bg-[#f4f1ea]">
@@ -101,50 +113,64 @@
             <!-- RIGHT: Dynamic Panel -->
             <div class="lg:col-span-8 h-full relative vintage-border bg-white overflow-hidden flex flex-col">
                 
-                <!-- VIEW 1: INSPECTOR (Default: Flex) -->
-                <div id="view-inspector" class="flex-1 flex flex-col p-8 fade-in overflow-y-auto">
-                    <div class="flex justify-between items-start mb-6 border-b-2 border-[#2d2a26] pb-4">
-                        <div>
-                            <span id="dt-type" class="inline-block px-3 py-1 bg-[#2d2a26] text-[#f4f1ea] text-xs font-bold uppercase tracking-widest mb-2">Terminal</span>
-                            <h2 id="dt-name" class="text-4xl md:text-5xl font-bold text-[#2d2a26] serif-font">Iloilo City</h2>
-                            <p id="dt-province" class="text-lg text-[#78716c] italic mt-1">Iloilo Province</p>
+                <!-- VIEW 1: INSPECTOR -->
+                <div id="view-inspector" class="flex-1 flex flex-col fade-in overflow-y-auto">
+                    <!-- Top Block: Identity -->
+                    <div class="p-8 pb-4">
+                        <div class="flex justify-between items-start mb-6 border-b-2 border-[#2d2a26] pb-4">
+                            <div>
+                                <span id="dt-type" class="inline-block px-3 py-1 bg-[#2d2a26] text-[#f4f1ea] text-xs font-bold uppercase tracking-widest mb-2">Terminal</span>
+                                <h2 id="dt-name" class="text-4xl md:text-5xl font-bold text-[#2d2a26] serif-font">Iloilo City</h2>
+                                <p id="dt-province" class="text-lg text-[#78716c] italic mt-1">Iloilo Province</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-5xl font-bold text-[#c2410c] serif-font" id="dt-km">0.0</div>
+                                <div class="text-xs uppercase text-gray-500 font-bold tracking-widest">Kilometer</div>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-5xl font-bold text-[#c2410c] serif-font" id="dt-km">0.0</div>
-                            <div class="text-xs uppercase text-gray-500 font-bold tracking-widest">Kilometer</div>
+
+                        <div class="bg-[#f9f7f2] p-6 border-l-4 border-[#c2410c] mb-6 shadow-sm">
+                            <h4 class="text-xs font-bold uppercase text-[#57534e] mb-2 tracking-wide">Operational Notes</h4>
+                            <p id="dt-desc" class="text-gray-800 text-lg leading-relaxed font-serif">
+                                Description loading...
+                            </p>
                         </div>
                     </div>
 
-                    <div class="bg-[#f9f7f2] p-6 border-l-4 border-[#c2410c] mb-8 shadow-sm">
-                        <h4 class="text-xs font-bold uppercase text-[#57534e] mb-2 tracking-wide">Historical Context</h4>
-                        <p id="dt-desc" class="text-gray-800 text-lg leading-relaxed font-serif">
-                            The southern terminus located at Muelle Loney. Primary function is intermodal transfer of sugar from rail cars to export vessels.
-                        </p>
-                    </div>
+                    <!-- Middle Block: Blueprint Specs -->
+                    <div class="blueprint-bg p-6 text-white flex-grow border-t-4 border-[#2d2a26]">
+                        <h4 class="text-xs font-bold uppercase tracking-[0.2em] mb-4 text-gray-400 border-b border-gray-600 pb-2">Track & Facility Specifications</h4>
+                        
+                        <div class="grid grid-cols-2 gap-8">
+                            <!-- Left: Capacity -->
+                            <div>
+                                <div class="mb-4">
+                                    <span class="block text-[10px] uppercase text-gray-400">Siding Capacity</span>
+                                    <span id="dt-siding" class="text-xl font-mono text-yellow-500">40 Cars</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] uppercase text-gray-400">Class</span>
+                                    <span id="dt-status" class="text-lg font-mono">Sub-Terminal</span>
+                                </div>
+                            </div>
 
-                    <div class="grid grid-cols-3 gap-4 mt-auto">
-                        <div class="p-4 bg-gray-50 border border-gray-200 text-center">
-                            <div class="text-xs uppercase text-gray-400 font-bold mb-1">Elevation</div>
-                            <div id="dt-elev" class="text-2xl font-bold text-[#2d2a26]">3 m</div>
-                        </div>
-                        <div class="p-4 bg-gray-50 border border-gray-200 text-center">
-                            <div class="text-xs uppercase text-gray-400 font-bold mb-1">Status</div>
-                            <div id="dt-status" class="text-lg font-bold text-[#2d2a26]">Permanent</div>
-                        </div>
-                        <div class="p-4 bg-gray-50 border border-gray-200 text-center">
-                            <div class="text-xs uppercase text-gray-400 font-bold mb-1">Function</div>
-                            <div id="dt-func" class="text-sm font-bold text-[#2d2a26] leading-tight mt-1">Export Hub</div>
+                            <!-- Right: Facilities List -->
+                            <div>
+                                <span class="block text-[10px] uppercase text-gray-400 mb-2">Installed Assets</span>
+                                <ul id="dt-facilities" class="space-y-2 text-sm font-mono">
+                                    <!-- JS Injected -->
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- VIEW 2: TIMETABLE (Default: Hidden) -->
-                <!-- Removed 'absolute' overlay. Used 'hidden' to physically remove from flow. -->
+                <!-- VIEW 2: TIMETABLE -->
                 <div id="view-timetable" class="hidden flex-1 flex-col bg-[#fffcf5] fade-in h-full">
                     <div class="bg-[#2d2a26] text-[#f4f1ea] p-4 flex justify-between items-center shadow-md shrink-0">
                         <div>
                             <h3 class="serif-font text-xl text-white">Working Timetable No. 4</h3>
-                            <div class="text-[10px] uppercase tracking-widest text-[#c2410c] mt-1 font-bold">Panay Line • Single Track Logic</div>
+                            <div class="text-[10px] uppercase tracking-widest text-[#c2410c] mt-1 font-bold">Includes Water Stops & Siding Dwell</div>
                         </div>
                         <div class="text-right">
                             <div class="text-xs font-mono text-gray-300">NORTH: Read Down ↓</div>
@@ -152,7 +178,6 @@
                         </div>
                     </div>
 
-                    <!-- Scrollable Table Area -->
                     <div class="flex-grow overflow-auto vintage-scroll relative h-full">
                         <table class="w-full text-left border-collapse min-w-[600px]">
                             <thead class="bg-[#e5e0d6] text-[#2d2a26] sticky top-0 z-20 shadow-sm">
@@ -176,16 +201,14 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody id="timetable-body" class="mono-font text-sm text-[#2d2a26]">
-                                <!-- JavaScript populates this -->
-                            </tbody>
+                            <tbody id="timetable-body" class="mono-font text-sm text-[#2d2a26]"></tbody>
                         </table>
                     </div>
                     
                     <div class="p-3 bg-[#e5e0d6] border-t border-[#d1ccc0] text-[10px] text-gray-600 flex justify-between shrink-0 font-bold uppercase tracking-wide">
                         <span>Notes: 'f' = Flag Stop</span>
-                        <span>⚔ = Mandatory Meet (Passi Siding)</span>
-                        <span>Daily Excl. Sunday</span>
+                        <span>💧 = Water Stop (7 min)</span>
+                        <span>⚔ = Crossing (20 min)</span>
                     </div>
                 </div>
 
@@ -196,91 +219,64 @@
     <!-- Analytics Section -->
     <section class="bg-[#e5e0d6] py-16 border-t border-[#d1ccc0]">
         <div class="container mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center text-[#2d2a26] serif-font mb-10">Network Analysis</h2>
+            <h2 class="text-3xl font-bold text-center text-[#2d2a26] serif-font mb-10">Engineering Analysis</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="vintage-border p-4 bg-white">
-                    <h3 class="text-sm font-bold uppercase text-[#2d2a26] mb-4 border-l-4 border-[#c2410c] pl-3">Elevation Profile (South to North)</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="elevationChart"></canvas>
-                    </div>
+                    <h3 class="text-sm font-bold uppercase text-[#2d2a26] mb-4 border-l-4 border-[#c2410c] pl-3">Gradient Profile</h3>
+                    <div class="chart-wrapper"><canvas id="elevationChart"></canvas></div>
                 </div>
                 <div class="vintage-border p-4 bg-white">
-                    <h3 class="text-sm font-bold uppercase text-[#2d2a26] mb-4 border-l-4 border-[#c2410c] pl-3">Operating Status Distribution</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="distributionChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Fare Calculator -->
-    <section class="bg-[#2d2a26] py-12 text-[#f4f1ea]">
-        <div class="container mx-auto px-4 text-center max-w-2xl">
-            <h2 class="text-2xl font-bold serif-font text-[#c2410c] mb-6">Fare Calculator</h2>
-            <div class="bg-[#3a3632] p-6 rounded shadow-lg border border-[#57534e]">
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="text-left">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Origin</label>
-                        <select id="calc-origin" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select>
-                    </div>
-                    <div class="text-left">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Destination</label>
-                        <select id="calc-dest" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select>
-                    </div>
-                </div>
-                <button id="calc-btn" class="w-full bg-[#c2410c] hover:bg-[#a1350a] text-white font-bold py-3 uppercase tracking-widest text-sm rounded shadow transition-all">
-                    Get 1920 Fare (3rd Class)
-                </button>
-                <div id="fare-output" class="mt-6 hidden pt-4 border-t border-dashed border-gray-600">
-                    <div class="text-4xl font-bold serif-font text-[#facc15]"><span id="fare-val">0.00</span> PHP</div>
-                    <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-wide">Rate: 0.03 PHP/km</div>
+                    <h3 class="text-sm font-bold uppercase text-[#2d2a26] mb-4 border-l-4 border-[#c2410c] pl-3">Infrastructure Distribution</h3>
+                    <div class="chart-wrapper"><canvas id="distributionChart"></canvas></div>
                 </div>
             </div>
         </div>
     </section>
 
     <footer class="bg-[#1c1917] text-[#57534e] py-8 text-center text-xs">
-        <p>Digitally Reconstructed from 1920 PRC Operations Audit</p>
+        <p>Digitally Reconstructed from PRC Annual Reports & Engineering Audits (1920)</p>
     </footer>
 
     <!-- LOGIC ENGINE -->
     <script>
-        // --- STATION DATA (33 Stops) ---
+        // --- ENHANCED STATION DATA ---
+        // Siding Rules: ~7 miles (11km). 
+        // Sub-terminals: Pototan, Passi, Dumarao (Wye, Ash Pit, Water, Storage).
+        
         const stations = [
-            { name: "Iloilo City", km: 0.0, type: "Terminal", status: "Permanent", elev: 3, notes: "Main Southern Terminus & Port." },
-            { name: "La Paz", km: 2.6, type: "Station", status: "Permanent", elev: 4, notes: "Railway HQ and Machine Shops." },
-            { name: "High School", km: 3.4, type: "Stop", status: "Flag Stop", elev: 4, notes: "Stop for Provincial High School." },
-            { name: "Jaro", km: 5.0, type: "Station", status: "Permanent", elev: 5, notes: "Residential center; market hub." },
-            { name: "Central Phil. Univ.", km: 6.2, type: "Stop", status: "Flag Stop", elev: 6, notes: "Jaro Industrial School halt." },
-            { name: "Pavia", km: 11.1, type: "Station", status: "Permanent", elev: 8, notes: "Brick making & agriculture." },
-            { name: "Santa Barbara", km: 16.5, type: "Station", status: "Permanent", elev: 10, notes: "Golf course access & historic town." },
-            { name: "Cabilauan", km: 22.7, type: "Stop", status: "Flag Stop", elev: 12, notes: "Barrio halt." },
-            { name: "New Lucena", km: 25.8, type: "Station", status: "Permanent", elev: 14, notes: "Rice collection point." },
-            { name: "Camoncil", km: 28.1, type: "Stop", status: "Flag Stop", elev: 15, notes: "Rural halt." },
-            { name: "Pototan", km: 34.1, type: "Station", status: "Permanent", elev: 16, notes: "Major Rice Granary hub." },
-            { name: "Abangay", km: 37.7, type: "Stop", status: "Flag Stop", elev: 18, notes: "Dingle southern access." },
-            { name: "Tabugon (Dingle)", km: 42.4, type: "Station", status: "Permanent", elev: 20, notes: "Limestone quarries." },
-            { name: "Dueñas", km: 47.6, type: "Station", status: "Permanent", elev: 25, notes: "Agricultural junction." },
-            { name: "Passi", km: 54.1, type: "Station", status: "Permanent", elev: 35, notes: "CROSSING STATION. Gateway to interior." },
-            { name: "Ventura", km: 57.4, type: "Station", status: "Permanent", elev: 45, notes: "Scenic caves & cliffs." },
-            { name: "Bagacay", km: 59.6, type: "Stop", status: "Flag Stop", elev: 55, notes: "Upland halt." },
-            { name: "Bitaogan", km: 62.4, type: "Stop", status: "Flag Stop", elev: 70, notes: "Hacienda stop." },
-            { name: "Santo Tomas", km: 64.7, type: "Stop", status: "Flag Stop", elev: 85, notes: "Grade approach." },
-            { name: "Summit", km: 66.8, type: "Stop", status: "Flag Stop", elev: 95, notes: "Highest point. Provincial boundary." },
-            { name: "Dumarao", km: 72.2, type: "Station", status: "Permanent", elev: 85, notes: "Forest products & trading." },
-            { name: "Alipasiauan", km: 76.7, type: "Stop", status: "Flag Stop", elev: 80, notes: "River crossing." },
-            { name: "Buntog", km: 79.1, type: "Station", status: "Permanent", elev: 75, notes: "Tourist access to caves." },
-            { name: "San Juan", km: 80.1, type: "Stop", status: "Flag Stop", elev: 65, notes: "Minor halt." },
-            { name: "Cuartero", km: 83.5, type: "Station", status: "Permanent", elev: 40, notes: "Corn & tobacco." },
-            { name: "Dao", km: 89.4, type: "Station", status: "Permanent", elev: 20, notes: "Major intermodal junction." },
-            { name: "Km 93", km: 93.0, type: "Stop", status: "Flag Stop", elev: 18, notes: "Sugar loading point." },
-            { name: "Km 94", km: 94.0, type: "Stop", status: "Flag Stop", elev: 18, notes: "Sugar loading point." },
-            { name: "Lacaron", km: 96.2, type: "Stop", status: "Flag Stop", elev: 15, notes: "Sugar district halt." },
-            { name: "Calaan", km: 98.5, type: "Stop", status: "Flag Stop", elev: 12, notes: "Barrio halt." },
-            { name: "Panitan", km: 102.9, type: "Station", status: "Permanent", elev: 10, notes: "Sugar center & steel bridge." },
-            { name: "Loctugan", km: 109.3, type: "Station", status: "Permanent", elev: 6, notes: "Historic suburban town." },
-            { name: "Capiz (Roxas)", km: 116.6, type: "Terminal", status: "Permanent", elev: 4, notes: "Northern Terminus & Port." }
+            { name: "Iloilo City", km: 0.0, type: "Terminal", status: "Permanent", elev: 3, facilities: ["Roundhouse", "Machine Shops", "Wharf Tracks", "Water Tank"], siding: "Terminal Yard", notes: "Main Southern Terminus." },
+            { name: "La Paz", km: 2.6, type: "Station", status: "Permanent", elev: 4, facilities: ["General Offices", "Foundry", "Car Shops"], siding: "Yard", notes: "Operational HQ." },
+            { name: "High School", km: 3.4, type: "Stop", status: "Flag Stop", elev: 4, facilities: [], siding: "None", notes: "Student Halt." },
+            { name: "Jaro", km: 5.0, type: "Station", status: "Permanent", elev: 5, facilities: ["Loading Track"], siding: "10 Cars", notes: "Market hub." },
+            { name: "Central Phil. Univ.", km: 6.2, type: "Stop", status: "Flag Stop", elev: 6, facilities: [], siding: "None", notes: "School halt." },
+            { name: "Pavia", km: 11.1, type: "Station", status: "Permanent", elev: 8, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point (7 mi from HQ)." },
+            { name: "Santa Barbara", km: 16.5, type: "Station", status: "Permanent", elev: 10, facilities: ["Water Tank", "Siding"], siding: "20 Cars", notes: "Historic town." },
+            { name: "Cabilauan", km: 22.7, type: "Stop", status: "Flag Stop", elev: 12, facilities: [], siding: "None", notes: "Barrio halt." },
+            { name: "New Lucena", km: 25.8, type: "Station", status: "Permanent", elev: 14, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point." },
+            { name: "Camoncil", km: 28.1, type: "Stop", status: "Flag Stop", elev: 15, facilities: [], siding: "None", notes: "Rural halt." },
+            { name: "Pototan", km: 34.1, type: "Sub-Terminal", status: "Permanent", elev: 16, facilities: ["Wye ↩️", "Water Tank 💧", "Ash Pit", "Storage Tracks"], siding: "Yard (60 Cars)", notes: "MAJOR HUB: Sub-terminal operations." },
+            { name: "Abangay", km: 37.7, type: "Stop", status: "Flag Stop", elev: 18, facilities: [], siding: "None", notes: "Rural halt." },
+            { name: "Tabugon (Dingle)", km: 42.4, type: "Station", status: "Permanent", elev: 20, facilities: ["Loading Track"], siding: "10 Cars", notes: "Quarry access." },
+            { name: "Dueñas", km: 47.6, type: "Station", status: "Permanent", elev: 25, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point." },
+            { name: "Passi", km: 54.1, type: "Sub-Terminal", status: "Permanent", elev: 35, facilities: ["Concrete Engine House 🏠", "Wye ↩️", "Water Tank 💧", "Ash Pit"], siding: "Yard (80 Cars)", notes: "MAJOR HUB: Central Division Point." },
+            { name: "Ventura", km: 57.4, type: "Station", status: "Permanent", elev: 45, facilities: [], siding: "10 Cars", notes: "Scenic stop." },
+            { name: "Bagacay", km: 59.6, type: "Stop", status: "Flag Stop", elev: 55, facilities: [], siding: "None", notes: "Upland halt." },
+            { name: "Bitaogan", km: 62.4, type: "Stop", status: "Flag Stop", elev: 70, facilities: [], siding: "None", notes: "Halt." },
+            { name: "Santo Tomas", km: 64.7, type: "Stop", status: "Flag Stop", elev: 85, facilities: [], siding: "None", notes: "Halt." },
+            { name: "Summit", km: 66.8, type: "Stop", status: "Flag Stop", elev: 95, facilities: ["Siding"], siding: "15 Cars", notes: "Peak elevation safety siding." },
+            { name: "Dumarao", km: 72.2, type: "Sub-Terminal", status: "Permanent", elev: 85, facilities: ["Wye ↩️", "Water Tank 💧", "Ash Pit"], siding: "Yard (50 Cars)", notes: "MAJOR HUB: Hill section base." },
+            { name: "Alipasiauan", km: 76.7, type: "Stop", status: "Flag Stop", elev: 80, facilities: [], siding: "None", notes: "River halt." },
+            { name: "Buntog", km: 79.1, type: "Station", status: "Permanent", elev: 75, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point." },
+            { name: "San Juan", km: 80.1, type: "Stop", status: "Flag Stop", elev: 65, facilities: [], siding: "None", notes: "Halt." },
+            { name: "Cuartero", km: 83.5, type: "Station", status: "Permanent", elev: 40, facilities: ["Loading Track"], siding: "10 Cars", notes: "Corn center." },
+            { name: "Dao", km: 89.4, type: "Station", status: "Permanent", elev: 20, facilities: ["Passing Siding", "Intermodal Ramp"], siding: "40 Cars", notes: "Road junction hub." },
+            { name: "Km 93", km: 93.0, type: "Stop", status: "Flag Stop", elev: 18, facilities: ["Spur"], siding: "Spur", notes: "Sugar loading." },
+            { name: "Km 94", km: 94.0, type: "Stop", status: "Flag Stop", elev: 18, facilities: ["Spur"], siding: "Spur", notes: "Sugar loading." },
+            { name: "Lacaron", km: 96.2, type: "Stop", status: "Flag Stop", elev: 15, facilities: [], siding: "None", notes: "Halt." },
+            { name: "Calaan", km: 98.5, type: "Stop", status: "Flag Stop", elev: 12, facilities: [], siding: "None", notes: "Halt." },
+            { name: "Panitan", km: 102.9, type: "Station", status: "Permanent", elev: 10, facilities: ["Passing Siding", "Water Tank"], siding: "40 Cars", notes: "Sugar center." },
+            { name: "Loctugan", km: 109.3, type: "Station", status: "Permanent", elev: 6, facilities: [], siding: "10 Cars", notes: "Suburban." },
+            { name: "Capiz (Roxas)", km: 116.6, type: "Terminal", status: "Permanent", elev: 4, facilities: ["Roundhouse", "Wharf Tracks", "Water Tank"], siding: "Terminal Yard", notes: "Northern Terminus." }
         ];
 
         // --- DOM REFERENCES ---
@@ -290,46 +286,38 @@
         const btnInspector = document.getElementById('btn-inspector');
         const btnTimetable = document.getElementById('btn-timetable');
 
-        // --- STATE MANAGEMENT ---
+        // --- STATE & VIEW LOGIC ---
         function switchView(mode) {
             if (mode === 'inspector') {
                 inspectorView.classList.remove('hidden');
                 inspectorView.classList.add('flex');
-                
                 timetableView.classList.add('hidden');
                 timetableView.classList.remove('flex');
-                
-                btnInspector.classList.add('bg-[#2d2a26]', 'text-white', 'border-[#2d2a26]');
-                btnInspector.classList.remove('bg-[#e5e0d6]', 'text-[#2d2a26]', 'border-[#a8a29e]');
-                
-                btnTimetable.classList.add('bg-[#e5e0d6]', 'text-[#2d2a26]', 'border-[#a8a29e]');
-                btnTimetable.classList.remove('bg-[#2d2a26]', 'text-white', 'border-[#2d2a26]');
+                updateButtons(btnInspector, btnTimetable);
             } else {
                 inspectorView.classList.add('hidden');
                 inspectorView.classList.remove('flex');
-                
                 timetableView.classList.remove('hidden');
                 timetableView.classList.add('flex');
-
-                btnTimetable.classList.add('bg-[#2d2a26]', 'text-white', 'border-[#2d2a26]');
-                btnTimetable.classList.remove('bg-[#e5e0d6]', 'text-[#2d2a26]', 'border-[#a8a29e]');
-                
-                btnInspector.classList.add('bg-[#e5e0d6]', 'text-[#2d2a26]', 'border-[#a8a29e]');
-                btnInspector.classList.remove('bg-[#2d2a26]', 'text-white', 'border-[#2d2a26]');
+                updateButtons(btnTimetable, btnInspector);
             }
         }
 
-        // --- RENDER STATION LIST ---
+        function updateButtons(active, inactive) {
+            active.className = "px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#2d2a26] text-white border border-[#2d2a26] rounded-l-lg hover:bg-[#444] rounded-r-lg";
+            inactive.className = "px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#e5e0d6] text-[#2d2a26] border border-[#a8a29e] rounded-l-lg hover:bg-[#d6d3d1] rounded-r-lg";
+            // Simple logic to keep rounded corners nice (simplification for single file)
+            if(active.id === 'btn-inspector') { active.classList.remove('rounded-r-lg'); inactive.classList.remove('rounded-l-lg'); }
+            else { active.classList.remove('rounded-l-lg'); inactive.classList.remove('rounded-r-lg'); }
+        }
+
+        // --- RENDER FUNCTIONS ---
         function renderStationList() {
             listContainer.innerHTML = '';
             stations.forEach((s, idx) => {
                 const div = document.createElement('div');
+                let dotClass = s.type.includes('Terminal') ? 'bg-[#c2410c]' : (s.status === 'Flag Stop' ? 'bg-white border-2 border-[#57534e]' : 'bg-[#2d2a26]');
                 
-                // Color Coding
-                let dotClass = 'bg-[#2d2a26]';
-                if (s.type === 'Terminal') dotClass = 'bg-[#c2410c]';
-                if (s.status === 'Flag Stop') dotClass = 'bg-white border-2 border-[#57534e]';
-
                 div.className = `flex items-center gap-3 cursor-pointer p-2 rounded-md station-node-container group ${idx===0 ? 'active':''}`;
                 div.id = `node-${idx}`;
                 div.onclick = () => loadInspector(idx);
@@ -343,116 +331,151 @@
                 `;
                 listContainer.appendChild(div);
             });
+            loadInspector(0); // Init first
         }
 
-        // --- LOAD INSPECTOR DATA ---
         function loadInspector(idx) {
-            // Update Active State
             document.querySelectorAll('.station-node-container').forEach(el => el.classList.remove('active'));
             document.getElementById(`node-${idx}`).classList.add('active');
-
             const s = stations[idx];
             
-            // Populate Fields
             document.getElementById('dt-name').innerText = s.name;
             document.getElementById('dt-km').innerText = s.km.toFixed(1);
             document.getElementById('dt-desc').innerText = s.notes;
-            document.getElementById('dt-elev').innerText = s.elev + ' m';
-            document.getElementById('dt-status').innerText = s.status;
-            document.getElementById('dt-type').innerText = s.type === 'Terminal' ? 'Terminal' : (s.status === 'Flag Stop' ? 'Halt' : 'Station');
-            
-            let func = "General Transport";
-            if(s.notes.includes("Sugar")) func = "Sugar Logistics";
-            else if(s.notes.includes("Rice")) func = "Rice Agriculture";
-            else if(s.notes.includes("School")) func = "Education Access";
-            else if(s.notes.includes("Tourist")) func = "Tourism";
-            document.getElementById('dt-func').innerText = func;
+            document.getElementById('dt-type').innerText = s.type;
+            document.getElementById('dt-siding').innerText = s.siding;
+            document.getElementById('dt-status').innerText = s.type; // Reuse type for status class
+
+            const facList = document.getElementById('dt-facilities');
+            facList.innerHTML = '';
+            if(s.facilities.length > 0) {
+                s.facilities.forEach(f => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-center text-yellow-500";
+                    li.innerHTML = `<span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>${f}`;
+                    facList.appendChild(li);
+                });
+            } else {
+                facList.innerHTML = '<li class="text-gray-500 italic">No major assets listed</li>';
+            }
         }
 
-        // --- TIMETABLE GENERATION (Refined Logic) ---
+        // --- TIMETABLE ENGINE (With Water Stops) ---
         function generateTimetable() {
             const tbody = document.getElementById('timetable-body');
             tbody.innerHTML = '';
 
-            const START_NB = 7 * 60; // 07:00
-            const START_SB = 7 * 60; // 07:00
-            const SPEED_FLAT = 2.45; // min/km
-            const SPEED_GRADE = 2.8; // min/km
+            const START_NB = 7 * 60; 
+            const START_SB = 7 * 60;
+            const SPEED_FLAT = 2.45;
+            const SPEED_GRADE = 2.8;
             
-            // Meet Point Configuration
+            // Major Event Points
             const PASSI_KM = 54.1;
-            const MEET_DEPARTURE = 585; // 09:45 AM fixed departure
+            const MEET_DURATION = 20; 
+            // Calculated Passi Arrival is ~9:12. Departure fixed at 9:45 for meet.
+            const MEET_DEPARTURE = 585; 
 
-            stations.forEach(s => {
-                const tr = document.createElement('tr');
-                const isPassi = s.name === "Passi";
-                tr.className = `timetable-row ${isPassi ? 'crossing-highlight' : ''}`;
+            // Water Stop Dwell (mins)
+            const WATER_DWELL = 7;
+            const waterStops = ["Pototan", "Dumarao"];
 
-                // --- Northbound Logic ---
-                let nb_arr = 0;
-                if (s.km <= PASSI_KM) {
-                    nb_arr = START_NB + (s.km * SPEED_FLAT);
-                } else {
-                    // Start from Passi Departure
-                    const distFromPassi = s.km - PASSI_KM;
-                    // Apply grade penalty for Passi->Dumarao(72.2)
-                    let timeFromPassi = 0;
-                    if (s.km <= 72.2) {
-                         timeFromPassi = distFromPassi * SPEED_GRADE;
-                    } else {
-                         const gradeLeg = (72.2 - PASSI_KM) * SPEED_GRADE;
-                         const flatLeg = (s.km - 72.2) * SPEED_FLAT;
-                         timeFromPassi = gradeLeg + flatLeg;
-                    }
-                    nb_arr = MEET_DEPARTURE + timeFromPassi;
+            // Running Counters
+            let nb_curr = START_NB;
+            let sb_curr = START_SB;
+
+            // We need to pre-calculate the array because Siding waits depend on fixed geometry, 
+            // but Water Stops are cumulative delays.
+            
+            // Let's create a simplified model:
+            // 1. Calculate pure travel times between stations.
+            // 2. Add dwell times at stations.
+            // 3. Force sync at Passi.
+
+            // First, map stations to travel segments
+            let nb_schedule = [];
+            let sb_schedule = [];
+            
+            // --- NB Calculation ---
+            let t_nb = START_NB;
+            for(let i=0; i<stations.length; i++) {
+                const s = stations[i];
+                // Add Travel Time from previous
+                if(i > 0) {
+                    const dist = s.km - stations[i-1].km;
+                    const speed = (s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT;
+                    t_nb += (dist * speed);
                 }
-
-                // --- Southbound Logic ---
-                let sb_arr = 0;
-                if (s.km >= PASSI_KM) {
-                    // Coming down from Capiz to Passi
-                    const distFromCapiz = 116.6 - s.km;
-                    let timeFromCapiz = 0;
-                    // Check if traversing grade (Dumarao -> Passi)
-                    if (s.km >= 72.2) {
-                        timeFromCapiz = distFromCapiz * SPEED_FLAT;
-                    } else {
-                        const flatLeg = (116.6 - 72.2) * SPEED_FLAT;
-                        const gradeLeg = (72.2 - s.km) * SPEED_GRADE;
-                        timeFromCapiz = flatLeg + gradeLeg;
-                    }
-                    sb_arr = START_SB + timeFromCapiz;
-                } else {
-                    // Departed Passi Southbound
-                    const distFromPassi = PASSI_KM - s.km;
-                    sb_arr = MEET_DEPARTURE + (distFromPassi * SPEED_FLAT);
-                }
-
-                // --- Render Helper ---
-                const renderTime = (mins, isPm) => {
-                    const adjMins = mins + (isPm ? 360 : 0); // +6 hours
-                    const h = Math.floor(adjMins / 60) % 24;
-                    const m = Math.floor(adjMins % 60);
-                    return `${h > 12 ? h-12 : (h===0?12:h)}:${m.toString().padStart(2,'0')}`;
-                };
                 
-                const fFlag = s.status === 'Flag Stop' ? '<span class="text-gray-400 italic mr-1">f</span>' : '';
-                const xFlag = isPassi ? '<span class="text-[#c2410c] font-bold mr-1">⚔</span>' : '';
+                // Add Water Dwell (if arriving at water stop)
+                if(waterStops.includes(s.name)) t_nb += WATER_DWELL;
+
+                // Sync at Passi (Meet)
+                if(s.name === "Passi") {
+                    // Force hold until Meet Departure
+                    if(t_nb < MEET_DEPARTURE) t_nb = MEET_DEPARTURE; 
+                }
+
+                nb_schedule.push(t_nb);
+            }
+
+            // --- SB Calculation (Reverse) ---
+            // Start at Capiz
+            let t_sb = START_SB;
+            let sb_times_map = {}; // Map station index to time
+            
+            // Iterate backwards from Capiz(last) to Iloilo(0)
+            for(let i=stations.length-1; i>=0; i--) {
+                const s = stations[i];
+                // Add travel time from previous (which was geographically north)
+                if(i < stations.length-1) {
+                    const dist = stations[i+1].km - s.km;
+                    const speed = (s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT;
+                    t_sb += (dist * speed);
+                }
+
+                if(waterStops.includes(s.name)) t_sb += WATER_DWELL;
+
+                if(s.name === "Passi") {
+                    if(t_sb < MEET_DEPARTURE) t_sb = MEET_DEPARTURE;
+                }
+                
+                sb_times_map[i] = t_sb;
+            }
+
+            // --- Render ---
+            stations.forEach((s, i) => {
+                const tr = document.createElement('tr');
+                const isWater = waterStops.includes(s.name);
+                const isPassi = s.name === "Passi";
+                
+                if(isWater) tr.classList.add('water-stop-row');
+                if(isPassi) tr.classList.add('crossing-highlight');
+
+                const timeStr = (mins, isPm) => {
+                    const adj = mins + (isPm ? 360 : 0);
+                    const h = Math.floor(adj/60)%24;
+                    const m = Math.floor(adj%60);
+                    return `${h>12?h-12:(h===0?12:h)}:${m.toString().padStart(2,'0')}`;
+                }
+
+                const flag = s.status === 'Flag Stop' ? '<span class="text-gray-400 italic mr-1">f</span>' : '';
+                const icon = isWater ? '💧 ' : (isPassi ? '⚔ ' : '');
 
                 tr.innerHTML = `
-                    <td class="p-3 ${isPassi ? 'font-bold text-[#c2410c]' : (s.status==='Flag Stop' ? 'text-gray-500 italic' : 'font-bold')} border-r border-gray-300">
+                    <td class="p-3 ${isPassi||isWater ? 'font-bold text-[#2d2a26]' : 'text-[#2d2a26]'} border-r border-gray-300">
                         ${s.name}
                     </td>
-                    <td class="p-2 text-center bg-[#f9f7f2] border-r border-gray-300">${fFlag}${xFlag}${renderTime(nb_arr, false)}</td>
-                    <td class="p-2 text-center bg-[#f9f7f2] border-r border-gray-300">${fFlag}${xFlag}${renderTime(nb_arr, true)}</td>
-                    <td class="p-2 text-center bg-white border-r border-gray-300 border-l-4 border-double">${fFlag}${xFlag}${renderTime(sb_arr, false)}</td>
-                    <td class="p-2 text-center bg-white">${fFlag}${xFlag}${renderTime(sb_arr, true)}</td>
+                    <td class="p-2 text-center bg-[#f9f7f2] border-r border-gray-300">${flag}${icon}${timeStr(nb_schedule[i], false)}</td>
+                    <td class="p-2 text-center bg-[#f9f7f2] border-r border-gray-300">${flag}${icon}${timeStr(nb_schedule[i], true)}</td>
+                    <td class="p-2 text-center bg-white border-r border-gray-300 border-l-4 border-double">${flag}${icon}${timeStr(sb_times_map[i], false)}</td>
+                    <td class="p-2 text-center bg-white">${flag}${icon}${timeStr(sb_times_map[i], true)}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- CHARTS ---
+        // --- CHART INIT ---
         function initCharts() {
             new Chart(document.getElementById('elevationChart'), {
                 type: 'line',
@@ -464,32 +487,32 @@
                         borderColor: '#2d2a26',
                         backgroundColor: 'rgba(194, 65, 12, 0.1)',
                         fill: true,
-                        pointRadius: 0,
-                        borderWidth: 2,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointRadius: 0
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: true } } }
             });
 
-            const counts = { Perm: 0, Flag: 0, Term: 0 };
+            // Facility Chart
+            const facCounts = { Water: 0, Siding: 0, Hub: 0 };
             stations.forEach(s => {
-                if(s.type === 'Terminal') counts.Term++;
-                else if(s.status === 'Flag Stop') counts.Flag++;
-                else counts.Perm++;
+                if(s.facilities.some(f => f.includes('Water'))) facCounts.Water++;
+                if(s.siding.includes('Cars') || s.siding === 'Yard') facCounts.Siding++;
+                if(s.type === 'Sub-Terminal') facCounts.Hub++;
             });
 
             new Chart(document.getElementById('distributionChart'), {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
-                    labels: ['Permanent', 'Flag Stop', 'Terminal'],
+                    labels: ['Passing Sidings', 'Water Stops', 'Sub-Terminals'],
                     datasets: [{
-                        data: [counts.Perm, counts.Flag, counts.Term],
-                        backgroundColor: ['#2d2a26', '#d6d3d1', '#c2410c'],
-                        borderWidth: 0
+                        label: 'Assets',
+                        data: [facCounts.Siding, facCounts.Water, facCounts.Hub],
+                        backgroundColor: ['#2d2a26', '#3b82f6', '#c2410c']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
@@ -498,21 +521,6 @@
             renderStationList();
             generateTimetable();
             initCharts();
-            
-            // Populate Calculator
-            const origin = document.getElementById('calc-origin');
-            const dest = document.getElementById('calc-dest');
-            stations.forEach((s, i) => {
-                origin.add(new Option(s.name, i));
-                dest.add(new Option(s.name, i));
-            });
-            dest.value = stations.length - 1;
-
-            document.getElementById('calc-btn').addEventListener('click', () => {
-                const d = Math.abs(stations[origin.value].km - stations[dest.value].km);
-                document.getElementById('fare-val').innerText = (d * 0.03).toFixed(2);
-                document.getElementById('fare-output').classList.remove('hidden');
-            });
         });
     </script>
 </body>
