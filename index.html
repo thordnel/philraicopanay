@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philippine Railway Company: Panay Line 1920 (Official Audit)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles for Vintage Aesthetic */
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #f4f1ea; /* Old Paper */
+            color: #2d2a26;
+        }
+        h1, h2, h3, .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* Interactive Node Styling */
+        .station-node-container {
+            transition: background-color 0.2s;
+        }
+        .station-node-container:hover {
+            background-color: rgba(194, 65, 12, 0.05);
+        }
+        .station-marker {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .active .station-marker {
+            background-color: #c2410c; /* Rust */
+            border-color: #7c2d12;
+            transform: scale(1.25);
+            box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.2);
+        }
+        .active .station-text {
+            color: #c2410c;
+            font-weight: 700;
+        }
+
+        /* The "Track" Line */
+        .rail-line-vertical {
+            background: repeating-linear-gradient(
+                to bottom,
+                #4a453e,
+                #4a453e 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            width: 4px;
+        }
+
+        /* Chart Containers - Responsive Constraints */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        /* Card Styling */
+        .vintage-border {
+            border: 1px solid #d1ccc0;
+            box-shadow: 6px 6px 0px rgba(45, 42, 38, 0.1);
+            background-color: #fffcf5;
+        }
+
+        /* Scrollbar */
+        .vintage-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .vintage-scroll::-webkit-scrollbar-track {
+            background: #e5e0d6;
+        }
+        .vintage-scroll::-webkit-scrollbar-thumb {
+            background: #a8a29e;
+            border-radius: 4px;
+        }
+        .vintage-scroll::-webkit-scrollbar-thumb:hover {
+            background: #78716c;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .content-animate {
+            animation: slideIn 0.4s ease-out;
+        }
+    </style>
+    <!-- Chosen Palette: "Colonial Archive" - Paper (#f4f1ea), Ink (#2d2a26), Rust (#c2410c), Faded Map Blue (#64748b) -->
+    <!-- Application Structure Plan:
+         1. Header: Establish 1920 context.
+         2. Layout: Split screen. Left side is the "Itinerary" (the list of 33 stations). Right side is the "Inspector's Report" (details).
+         3. Interactions: Clicking a station on the left updates the right panel.
+         4. Dashboard: Two charts below (Elevation & Cargo) to visualize the *nature* of the line.
+         5. Calculator: Utility to engage user with the distance data.
+    -->
+    <!-- Visualization & Content Choices:
+         - Station List: Use a vertical timeline metaphor. Essential for showing the density of stops (e.g. Km 93/94).
+         - Elevation Chart: Chart.js Line. Goal: Show the "Summit" challenge.
+         - Cargo Chart: Chart.js Doughnut. Goal: Show the "Sugar vs Rice" economy.
+         - NO SVG / NO Mermaid. Pure CSS/HTML/Canvas.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-[#2d2a26] text-[#f4f1ea] py-6 border-b-4 border-[#c2410c] shadow-lg relative z-10">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl md:text-5xl font-bold tracking-widest uppercase mb-2">Philippine Railway Co.</h1>
+            <p class="serif-font text-lg md:text-xl text-[#d1ccc0] italic">Panay Division • The 1920 Official Audit</p>
+        </div>
+    </header>
+
+    <!-- Introduction -->
+    <section class="bg-[#e5e0d6] py-8">
+        <div class="container mx-auto px-4 max-w-4xl text-center">
+            <div class="vintage-border p-6 md:p-8 text-left md:text-center">
+                <h2 class="text-2xl font-bold text-[#c2410c] mb-3 serif-font">The Complete 116.6 km Line</h2>
+                <p class="text-gray-700 leading-relaxed">
+                    Based on the 1920 engineering audit, the Panay Line was a complex network of <strong>33 operational points</strong>, not just major towns. It served as a "sugar conveyor belt," linking the haciendas of the interior to the international port of Iloilo. From the bustling shops of <em>La Paz</em> to the steep 1.5% grade at the <em>Summit</em>, explore the definitive station roster below.
+                </p>
+                <div class="mt-4 flex flex-wrap justify-center gap-4 text-xs font-bold uppercase tracking-widest text-[#57534e]">
+                    <span class="flex items-center"><span class="w-3 h-3 bg-[#2d2a26] rounded-full mr-2"></span>Permanent Station</span>
+                    <span class="flex items-center"><span class="w-3 h-3 bg-[#fff] border-2 border-[#57534e] rounded-full mr-2"></span>Flag Stop</span>
+                    <span class="flex items-center"><span class="w-3 h-3 bg-[#c2410c] rounded-full mr-2"></span>Terminal</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Interactive Area -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[800px] lg:h-[700px]">
+            
+            <!-- LEFT COLUMN: The Station List (Scrollable) -->
+            <div class="lg:col-span-4 h-full flex flex-col vintage-border overflow-hidden">
+                <div class="bg-[#d6d3d1] p-3 border-b border-[#a8a29e]">
+                    <h3 class="font-bold text-[#2d2a26] uppercase text-sm tracking-wide">Station Manifest (South to North)</h3>
+                </div>
+                <div id="station-list-container" class="overflow-y-auto vintage-scroll flex-grow relative bg-[#f4f1ea] p-4">
+                    <!-- The vertical rail line -->
+                    <div class="absolute left-[29px] top-0 bottom-0 rail-line-vertical opacity-40"></div>
+                    <!-- JS Injected Items -->
+                    <div id="station-list" class="space-y-4 relative z-10"></div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Inspector's Report (Detail View) -->
+            <div class="lg:col-span-8 h-full">
+                <div id="detail-panel" class="h-full vintage-border p-8 flex flex-col justify-between relative bg-white">
+                    
+                    <!-- Top Info -->
+                    <div class="content-animate">
+                        <div class="flex justify-between items-start mb-6 border-b-2 border-[#2d2a26] pb-4">
+                            <div>
+                                <span id="dt-type" class="inline-block px-3 py-1 bg-[#2d2a26] text-[#f4f1ea] text-xs font-bold uppercase tracking-widest mb-2">Terminal</span>
+                                <h2 id="dt-name" class="text-4xl md:text-5xl font-bold text-[#2d2a26] serif-font">Iloilo City</h2>
+                                <p id="dt-province" class="text-lg text-[#78716c] italic mt-1">Iloilo Province • Sector I</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-4xl font-bold text-[#c2410c]" id="dt-km">0.0</div>
+                                <div class="text-xs uppercase text-gray-500 font-bold">Kilometer</div>
+                            </div>
+                        </div>
+
+                        <!-- Description Box -->
+                        <div class="bg-[#f4f1ea] p-6 border-l-4 border-[#c2410c] mb-8">
+                            <h4 class="text-sm font-bold uppercase text-[#57534e] mb-2">1920 Audit Notes</h4>
+                            <p id="dt-desc" class="text-gray-800 text-lg leading-relaxed">
+                                The southern terminus located at Muelle Loney. Primary function is intermodal transfer of sugar from rail cars to export vessels.
+                            </p>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="block text-gray-400 text-xs uppercase font-bold">Elevation</span>
+                                <span id="dt-elev" class="text-xl font-bold text-[#2d2a26]">3 m</span>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="block text-gray-400 text-xs uppercase font-bold">Status</span>
+                                <span id="dt-status" class="text-lg font-bold text-[#2d2a26]">Permanent</span>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                                <span class="block text-gray-400 text-xs uppercase font-bold">Key Function</span>
+                                <span id="dt-func" class="text-lg font-bold text-[#2d2a26]">Export Hub</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer note -->
+                    <div class="mt-auto pt-6 text-right">
+                        <span class="text-xs text-gray-400 font-mono">REF: PRC-1920-AUDIT-DOC-11</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Data Visualization Section -->
+    <section class="bg-[#e5e0d6] py-16 border-t border-[#d1ccc0]">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#2d2a26] serif-font">Operational Metrics</h2>
+                <p class="text-gray-600">Analyzing the physical and economic geography of the line.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Elevation Chart -->
+                <div class="vintage-border p-4 bg-white">
+                    <h3 class="text-lg font-bold text-[#2d2a26] mb-4 border-l-4 border-[#c2410c] pl-3">The "Summit" Profile</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="elevationChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 italic text-center">Note the steep ascent between Passi (Km 54) and the Summit (Km 66).</p>
+                </div>
+
+                <!-- Cargo/Station Type Chart -->
+                <div class="vintage-border p-4 bg-white">
+                    <h3 class="text-lg font-bold text-[#2d2a26] mb-4 border-l-4 border-[#c2410c] pl-3">Station Distribution (1920)</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 italic text-center">Flag stops outnumbered permanent stations in the rural sectors to cut costs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fare Calculator -->
+    <section class="bg-[#2d2a26] py-12 text-[#f4f1ea]">
+        <div class="container mx-auto px-4 text-center max-w-2xl">
+            <h2 class="text-2xl font-bold serif-font text-[#c2410c] mb-6">Ticket Window</h2>
+            <div class="bg-[#3a3632] p-6 rounded shadow-lg border border-[#57534e]">
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <div class="flex-1 text-left">
+                        <label class="text-xs uppercase font-bold text-gray-400">Origin</label>
+                        <select id="calc-origin" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded"></select>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <label class="text-xs uppercase font-bold text-gray-400">Destination</label>
+                        <select id="calc-dest" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded"></select>
+                    </div>
+                </div>
+                <button id="calc-btn" class="w-full bg-[#c2410c] hover:bg-[#a1350a] text-white font-bold py-3 uppercase tracking-widest transition-colors rounded">
+                    Calculate Fare (3rd Class)
+                </button>
+                <div id="fare-output" class="mt-6 hidden border-t border-dashed border-gray-600 pt-4">
+                    <div class="text-4xl font-bold serif-font text-[#facc15]"><span id="fare-val">0.00</span> PHP</div>
+                    <div class="text-xs text-gray-400 mt-1">Based on 1920 Rate: 0.03 PHP/km</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#1c1917] text-[#78716c] py-6 text-center text-xs">
+        <p>Generated from "Infrastructure and Empire: A Comprehensive Historical Audit (Circa 1920)"</p>
+        <p class="mt-1">&copy; 2026 Digital Archive Project</p>
+    </footer>
+
+    <!-- LOGIC -->
+    <script>
+        // --- DATA: Based on "Comprehensive Station List (1920)" Table ---
+        const stations = [
+            { name: "Iloilo City", km: 0.0, type: "Terminal", status: "Permanent", elev: 3, notes: "Located at Muelle Loney. Integrated with Custom House and shipping wharves." },
+            { name: "La Paz", km: 2.6, type: "Station", status: "Permanent", elev: 4, notes: "Operational HQ. Home to the Machine Shops and Foundries." },
+            { name: "High School", km: 3.4, type: "Stop", status: "Flag Stop", elev: 4, notes: "Institutional Halt serving Iloilo High School students." },
+            { name: "Jaro", km: 5.0, type: "Station", status: "Permanent", elev: 5, notes: "Residential hub for the elite planter class. Famous Thursday market." },
+            { name: "Central Phil. Univ.", km: 6.2, type: "Stop", status: "Flag Stop", elev: 6, notes: "Historically 'Jaro Industrial School'. Vocational campus stop." },
+            { name: "Pavia", km: 11.1, type: "Station", status: "Permanent", elev: 8, notes: "Brick and pottery industry center. Rice agricultural hub." },
+            { name: "Santa Barbara", km: 16.5, type: "Station", status: "Permanent", elev: 10, notes: "Access to Santa Barbara Golf Course (built 1907) and historic town center." },
+            { name: "Cabilauan", km: 22.7, type: "Stop", status: "Flag Stop", elev: 12, notes: "Rural barrio halt serving scattered farming communities." },
+            { name: "New Lucena", km: 25.8, type: "Station", status: "Permanent", elev: 14, notes: "Formerly 'Jimanban'. Rice collection point." },
+            { name: "Camoncil", km: 28.1, type: "Stop", status: "Flag Stop", elev: 15, notes: "Minor stop named after the Camachile tree." },
+            { name: "Pototan", km: 34.1, type: "Station", status: "Permanent", elev: 16, notes: "The 'Rice Granary'. Major warehousing (bodegas) and siding facilities." },
+            { name: "Abangay", km: 37.7, type: "Stop", status: "Flag Stop", elev: 18, notes: "Access to southern barrios of Dingle." },
+            { name: "Tabugon (Dingle)", km: 42.4, type: "Station", status: "Permanent", elev: 20, notes: "Station for Dingle. Near limestone cliffs and quarries." },
+            { name: "Dueñas", km: 47.6, type: "Station", status: "Permanent", elev: 25, notes: "Agricultural junction town. Transition to mixed crops." },
+            { name: "Passi", km: 54.1, type: "Station", status: "Permanent", elev: 35, notes: "'Gateway to the North'. Major sugar cane loading hub for the interior." },
+            { name: "Ventura", km: 57.4, type: "Station", status: "Permanent", elev: 45, notes: "Scenic stop near white coral cliffs and caves. Tourist point of interest." },
+            { name: "Bagacay", km: 59.6, type: "Stop", status: "Flag Stop", elev: 55, notes: "Upland halt in scrub/bamboo terrain." },
+            { name: "Bitaogan", km: 62.4, type: "Stop", status: "Flag Stop", elev: 70, notes: "Hillside hacienda stop on the ascent." },
+            { name: "Santo Tomas", km: 64.7, type: "Stop", status: "Flag Stop", elev: 85, notes: "Grade approach halt. Locomotive check point." },
+            { name: "Summit", km: 66.8, type: "Stop", status: "Flag Stop", elev: 95, notes: "Highest elevation. Provincial boundary (Iloilo/Capiz). 1907 track meeting point." },
+            { name: "Dumarao", km: 72.2, type: "Station", status: "Permanent", elev: 85, notes: "First town in Capiz. Forest products and upland trading." },
+            { name: "Alipasiauan", km: 76.7, type: "Stop", status: "Flag Stop", elev: 80, notes: "River crossing halt." },
+            { name: "Buntog", km: 79.1, type: "Station", status: "Permanent", elev: 75, notes: "Access to Dumalag town (4km) & Sohut Caves. Tourist trailhead." },
+            { name: "San Juan", km: 80.1, type: "Stop", status: "Flag Stop", elev: 65, notes: "Minor halt near Buntog." },
+            { name: "Cuartero", km: 83.5, type: "Station", status: "Permanent", elev: 40, notes: "Corn and Tobacco center in the Panay River basin." },
+            { name: "Dao", km: 89.4, type: "Station", status: "Permanent", elev: 20, notes: "Major Intermodal Hub. Feeder roads connect from Mambusao and Sigma." },
+            { name: "Km 93", km: 93.0, type: "Stop", status: "Flag Stop", elev: 18, notes: "Unnamed seasonal loading point for sugar plantations." },
+            { name: "Km 94", km: 94.0, type: "Stop", status: "Flag Stop", elev: 18, notes: "Unnamed seasonal loading point for sugar plantations." },
+            { name: "Lacaron", km: 96.2, type: "Stop", status: "Flag Stop", elev: 15, notes: "Barrio halt in the sugar district." },
+            { name: "Calaan", km: 98.5, type: "Stop", status: "Flag Stop", elev: 12, notes: "Barrio halt." },
+            { name: "Panitan", km: 102.9, type: "Station", status: "Permanent", elev: 10, notes: "Major sugar district. Location of significant steel bridge over Panay River." },
+            { name: "Loctugan", km: 109.3, type: "Station", status: "Permanent", elev: 6, notes: "Historic suburban barrio of Capiz town with ancient stone church." },
+            { name: "Capiz (Roxas)", km: 116.6, type: "Terminal", status: "Permanent", elev: 4, notes: "Northern Terminus. Connects to inter-island steamships." }
+        ];
+
+        // --- DOM Elements ---
+        const listContainer = document.getElementById('station-list');
+        const detailElements = {
+            name: document.getElementById('dt-name'),
+            type: document.getElementById('dt-type'),
+            km: document.getElementById('dt-km'),
+            province: document.getElementById('dt-province'),
+            desc: document.getElementById('dt-desc'),
+            elev: document.getElementById('dt-elev'),
+            status: document.getElementById('dt-status'),
+            func: document.getElementById('dt-func'),
+            panel: document.querySelector('.content-animate')
+        };
+
+        // --- Render List ---
+        function renderList() {
+            stations.forEach((s, idx) => {
+                const el = document.createElement('div');
+                // Styling logic based on type
+                const isTerminal = s.type === 'Terminal';
+                const isFlag = s.status === 'Flag Stop';
+                
+                const dotColor = isTerminal ? 'bg-[#c2410c]' : (isFlag ? 'bg-white border-2 border-[#57534e]' : 'bg-[#2d2a26]');
+                const textColor = isFlag ? 'text-gray-500' : 'text-[#2d2a26]';
+                const weight = isTerminal ? 'font-bold' : 'font-normal';
+
+                el.className = `flex items-center gap-4 cursor-pointer p-2 rounded station-node-container group ${idx === 0 ? 'active' : ''}`;
+                el.onclick = () => selectStation(idx);
+                el.innerHTML = `
+                    <div class="relative z-20 w-4 h-4 rounded-full ${dotColor} flex-shrink-0 station-marker shadow-sm"></div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-baseline">
+                            <span class="station-text text-sm ${weight} ${textColor} group-hover:text-[#c2410c] transition-colors">${s.name}</span>
+                            <span class="text-xs font-mono text-gray-400">${s.km.toFixed(1)}</span>
+                        </div>
+                    </div>
+                `;
+                el.id = `node-${idx}`;
+                listContainer.appendChild(el);
+            });
+        }
+
+        // --- Select Station Logic ---
+        function selectStation(idx) {
+            // UI Update
+            document.querySelectorAll('.station-node-container').forEach(e => e.classList.remove('active'));
+            document.getElementById(`node-${idx}`).classList.add('active');
+
+            // Data Update
+            const s = stations[idx];
+            
+            // Animation Reset
+            const panel = detailElements.panel;
+            panel.classList.remove('content-animate');
+            void panel.offsetWidth; // trigger reflow
+            panel.classList.add('content-animate');
+
+            // Populate Fields
+            detailElements.name.innerText = s.name;
+            detailElements.km.innerText = s.km.toFixed(1);
+            detailElements.type.innerText = s.type === 'Terminal' ? 'Terminal' : (s.status === 'Flag Stop' ? 'Halt' : 'Station');
+            detailElements.desc.innerText = s.notes;
+            detailElements.elev.innerText = s.elev + ' m';
+            detailElements.status.innerText = s.status;
+            
+            // Derive Context
+            let func = "General Transport";
+            if(s.notes.includes("Sugar")) func = "Sugar Logistics";
+            else if(s.notes.includes("Rice")) func = "Rice Agriculture";
+            else if(s.notes.includes("School")) func = "Education Access";
+            else if(s.notes.includes("Tourist")) func = "Tourism/Leisure";
+            detailElements.func.innerText = func;
+
+            // Province Logic
+            const prov = s.km < 66.8 ? "Iloilo Province" : (s.km > 67 ? "Capiz Province" : "Provincial Boundary");
+            detailElements.province.innerText = prov + (s.km < 10 ? " • Metro Sector" : (s.km > 50 && s.km < 75 ? " • Central Range" : ""));
+        }
+
+        // --- Charts Initialization ---
+        function initCharts() {
+            // 1. Elevation Profile
+            const ctxElev = document.getElementById('elevationChart').getContext('2d');
+            new Chart(ctxElev, {
+                type: 'line',
+                data: {
+                    labels: stations.map(s => s.km), // X-axis is KM
+                    datasets: [{
+                        label: 'Elevation (m)',
+                        data: stations.map(s => s.elev),
+                        borderColor: '#2d2a26',
+                        backgroundColor: 'rgba(194, 65, 12, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: true, title: { display: true, text: 'Kilometers from Iloilo' } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // 2. Station Type Distribution
+            const typeCounts = { Permanent: 0, Flag: 0, Terminal: 0 };
+            stations.forEach(s => {
+                if(s.type === 'Terminal') typeCounts.Terminal++;
+                else if(s.status === 'Flag Stop') typeCounts.Flag++;
+                else typeCounts.Permanent++;
+            });
+
+            const ctxDist = document.getElementById('distributionChart').getContext('2d');
+            new Chart(ctxDist, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Permanent Stn', 'Flag Stop', 'Terminal'],
+                    datasets: [{
+                        data: [typeCounts.Permanent, typeCounts.Flag, typeCounts.Terminal],
+                        backgroundColor: ['#2d2a26', '#d6d3d1', '#c2410c'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // --- Calculator Logic ---
+        function initCalc() {
+            const origin = document.getElementById('calc-origin');
+            const dest = document.getElementById('calc-dest');
+            
+            stations.forEach((s, i) => {
+                origin.add(new Option(s.name, i));
+                dest.add(new Option(s.name, i));
+            });
+            dest.value = stations.length - 1; // Default to Capiz
+
+            document.getElementById('calc-btn').addEventListener('click', () => {
+                const i1 = stations[origin.value];
+                const i2 = stations[dest.value];
+                const dist = Math.abs(i1.km - i2.km);
+                const fare = (dist * 0.03).toFixed(2); // 1920 rate
+                
+                document.getElementById('fare-val').innerText = fare;
+                document.getElementById('fare-output').classList.remove('hidden');
+            });
+        }
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderList();
+            initCharts();
+            initCalc();
+        });
+    </script>
+</body>
+</html>
