@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Philippine Railway Company: Panay Line 1920 (Complete Edition)</title>
+    <title>Philippine Railway Company: Panay Line 1920 (Staff Edition)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -33,35 +33,38 @@
             box-shadow: 6px 6px 0px rgba(45, 42, 38, 0.1);
             background-color: #fffcf5;
         }
-
-        /* Scrollbars */
         .vintage-scroll::-webkit-scrollbar { width: 8px; }
         .vintage-scroll::-webkit-scrollbar-track { background: #e5e0d6; }
         .vintage-scroll::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 4px; }
-
-        /* Timetable Specifics */
         .timetable-row { border-bottom: 1px solid #e5e0d6; }
         .timetable-row:nth-child(even) { background-color: #f9f7f2; }
         .timetable-row:hover { background-color: #ffedd5; }
-        
-        /* Special Rows */
-        .water-stop-row { background-color: #eff6ff !important; } /* Light blue for water */
+        .water-stop-row { background-color: #eff6ff !important; }
         .crossing-highlight {
             background-color: #fff7ed !important;
             border-top: 2px dashed #c2410c;
             border-bottom: 2px dashed #c2410c;
         }
-        
-        /* Animation */
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Blueprint Grid Background */
         .blueprint-bg {
             background-color: #2e3642;
             background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 20px 20px;
+        }
+        
+        /* Staff Badge */
+        .staff-badge {
+            background-color: #2d2a26;
+            color: #f4f1ea;
+            padding: 4px 8px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid #c2410c;
+            display: inline-block;
         }
     </style>
 </head>
@@ -71,7 +74,7 @@
     <header class="bg-[#2d2a26] text-[#f4f1ea] py-6 border-b-4 border-[#c2410c] shadow-lg z-20 relative">
         <div class="container mx-auto px-4 text-center">
             <h1 class="text-3xl md:text-5xl font-bold tracking-widest uppercase mb-2">Philippine Railway Co.</h1>
-            <p class="serif-font text-lg md:text-xl text-[#d1ccc0] italic">Panay Division • Infrastructure & Operations Audit (1920)</p>
+            <p class="serif-font text-lg md:text-xl text-[#d1ccc0] italic">Panay Division • 1920 Operational Audit</p>
         </div>
     </header>
 
@@ -79,9 +82,7 @@
     <section class="bg-[#e5e0d6] py-6 shadow-inner relative z-10">
         <div class="container mx-auto px-4 text-center">
             <p class="text-gray-800 mb-4 max-w-4xl mx-auto text-sm md:text-base">
-                Explore the <strong>33-station network</strong>. Updated with Annual Report data: 
-                <span class="font-bold text-[#c2410c]">Sub-terminals</span> at Pototan, Passi, and Dumarao include Wyes, Ash Pits, and Water Tanks. 
-                <span class="font-bold text-blue-800">Water Stops</span> and <span class="font-bold text-[#c2410c]">Passing Sidings</span> (every ~7 miles) are now integrated into the timetable.
+                <strong>Update:</strong> Personnel Roster included. Click any station to view the <span class="font-bold text-[#c2410c]">Station Master's</span> assigned duties.
             </p>
             <div class="inline-flex rounded-md shadow-sm" role="group">
                 <button onclick="switchView('inspector')" id="btn-inspector" class="px-6 py-2 text-xs md:text-sm font-bold uppercase tracking-widest bg-[#2d2a26] text-white border border-[#2d2a26] rounded-l-lg hover:bg-[#444]">
@@ -129,23 +130,37 @@
                             </div>
                         </div>
 
+                        <!-- Staffing Module (NEW) -->
+                        <div class="bg-gray-100 border border-gray-300 p-4 mb-6 rounded flex items-center gap-4">
+                            <div class="bg-[#2d2a26] rounded-full p-3">
+                                <!-- Simple Icon for Staff -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <div class="flex-grow">
+                                <h4 class="text-xs font-bold uppercase text-gray-500 tracking-wide">Personnel In Charge</h4>
+                                <div id="dt-staff-title" class="text-lg font-bold text-[#2d2a26] serif-font">Station Superintendent</div>
+                                <p id="dt-staff-role" class="text-sm text-gray-600 italic mt-1">Responsible for Port Logistics & Admin.</p>
+                            </div>
+                            <div class="text-right">
+                                <span id="dt-ticket" class="staff-badge">Ticket Window</span>
+                            </div>
+                        </div>
+
                         <div class="bg-[#f9f7f2] p-6 border-l-4 border-[#c2410c] mb-6 shadow-sm">
-                            <h4 class="text-xs font-bold uppercase text-[#57534e] mb-2 tracking-wide">Operational Notes</h4>
-                            <p id="dt-desc" class="text-gray-800 text-lg leading-relaxed font-serif">
-                                Description loading...
-                            </p>
+                            <h4 class="text-xs font-bold uppercase text-[#57534e] mb-2 tracking-wide">Station Notes</h4>
+                            <p id="dt-desc" class="text-gray-800 text-lg leading-relaxed font-serif">Description loading...</p>
                         </div>
                     </div>
 
                     <!-- Middle Block: Blueprint Specs -->
                     <div class="blueprint-bg p-6 text-white flex-grow border-t-4 border-[#2d2a26]">
-                        <h4 class="text-xs font-bold uppercase tracking-[0.2em] mb-4 text-gray-400 border-b border-gray-600 pb-2">Track & Facility Specifications</h4>
-                        
+                        <h4 class="text-xs font-bold uppercase tracking-[0.2em] mb-4 text-gray-400 border-b border-gray-600 pb-2">Technical Specifications</h4>
                         <div class="grid grid-cols-2 gap-8">
-                            <!-- Left: Capacity -->
                             <div>
                                 <div class="mb-4">
-                                    <span class="block text-[10px] uppercase text-gray-400">Siding Capacity</span>
+                                    <span class="block text-[10px] uppercase text-gray-400">Track Capacity</span>
                                     <span id="dt-siding" class="text-xl font-mono text-yellow-500">40 Cars</span>
                                 </div>
                                 <div>
@@ -153,13 +168,9 @@
                                     <span id="dt-status" class="text-lg font-mono">Sub-Terminal</span>
                                 </div>
                             </div>
-
-                            <!-- Right: Facilities List -->
                             <div>
-                                <span class="block text-[10px] uppercase text-gray-400 mb-2">Installed Assets</span>
-                                <ul id="dt-facilities" class="space-y-2 text-sm font-mono">
-                                    <!-- JS Injected -->
-                                </ul>
+                                <span class="block text-[10px] uppercase text-gray-400 mb-2">Assets</span>
+                                <ul id="dt-facilities" class="space-y-2 text-sm font-mono"></ul>
                             </div>
                         </div>
                     </div>
@@ -177,34 +188,20 @@
                             <div class="text-xs font-mono text-gray-300">SOUTH: Read Down ↓</div>
                         </div>
                     </div>
-
                     <div class="flex-grow overflow-auto vintage-scroll relative h-full">
                         <table class="w-full text-left border-collapse min-w-[600px]">
                             <thead class="bg-[#e5e0d6] text-[#2d2a26] sticky top-0 z-20 shadow-sm">
                                 <tr>
                                     <th class="p-3 border-b-2 border-[#a8a29e] w-1/3 text-xs uppercase font-bold tracking-wider">Station</th>
-                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#d6d3d1] border-r border-gray-400 w-1/6">
-                                        <div class="text-[10px] uppercase font-bold">Northbound</div>
-                                        <div class="font-mono text-xs font-bold">TR #1</div>
-                                    </th>
-                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#d6d3d1] w-1/6">
-                                        <div class="text-[10px] uppercase font-bold">Northbound</div>
-                                        <div class="font-mono text-xs font-bold">TR #3</div>
-                                    </th>
-                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#e7e5e4] border-l-4 border-double border-gray-400 w-1/6">
-                                        <div class="text-[10px] uppercase font-bold">Southbound</div>
-                                        <div class="font-mono text-xs font-bold">TR #2</div>
-                                    </th>
-                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#e7e5e4] w-1/6">
-                                        <div class="text-[10px] uppercase font-bold">Southbound</div>
-                                        <div class="font-mono text-xs font-bold">TR #4</div>
-                                    </th>
+                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#d6d3d1] border-r border-gray-400 w-1/6"><div class="text-[10px] uppercase font-bold">North</div><div class="font-mono text-xs font-bold">TR #1</div></th>
+                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#d6d3d1] w-1/6"><div class="text-[10px] uppercase font-bold">North</div><div class="font-mono text-xs font-bold">TR #3</div></th>
+                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#e7e5e4] border-l-4 border-double border-gray-400 w-1/6"><div class="text-[10px] uppercase font-bold">South</div><div class="font-mono text-xs font-bold">TR #2</div></th>
+                                    <th class="p-2 border-b-2 border-[#a8a29e] text-center bg-[#e7e5e4] w-1/6"><div class="text-[10px] uppercase font-bold">South</div><div class="font-mono text-xs font-bold">TR #4</div></th>
                                 </tr>
                             </thead>
                             <tbody id="timetable-body" class="mono-font text-sm text-[#2d2a26]"></tbody>
                         </table>
                     </div>
-                    
                     <div class="p-3 bg-[#e5e0d6] border-t border-[#d1ccc0] text-[10px] text-gray-600 flex justify-between shrink-0 font-bold uppercase tracking-wide">
                         <span>Notes: 'f' = Flag Stop</span>
                         <span>💧 = Water Stop (7 min)</span>
@@ -233,24 +230,16 @@
         </div>
     </section>
 
-    <!-- Fare Calculator (RESTORED) -->
+    <!-- Fare Calculator -->
     <section class="bg-[#2d2a26] py-12 text-[#f4f1ea]">
         <div class="container mx-auto px-4 text-center max-w-2xl">
             <h2 class="text-2xl font-bold serif-font text-[#c2410c] mb-6">Ticket Office</h2>
             <div class="bg-[#3a3632] p-6 rounded shadow-lg border border-[#57534e]">
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="text-left">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Origin</label>
-                        <select id="calc-origin" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select>
-                    </div>
-                    <div class="text-left">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Destination</label>
-                        <select id="calc-dest" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select>
-                    </div>
+                    <div class="text-left"><label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Origin</label><select id="calc-origin" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select></div>
+                    <div class="text-left"><label class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Destination</label><select id="calc-dest" class="w-full bg-[#2d2a26] text-white border border-gray-600 p-2 mt-1 rounded text-sm focus:border-[#c2410c] outline-none"></select></div>
                 </div>
-                <button id="calc-btn" class="w-full bg-[#c2410c] hover:bg-[#a1350a] text-white font-bold py-3 uppercase tracking-widest text-sm rounded shadow transition-all">
-                    Purchase Ticket (3rd Class)
-                </button>
+                <button id="calc-btn" class="w-full bg-[#c2410c] hover:bg-[#a1350a] text-white font-bold py-3 uppercase tracking-widest text-sm rounded shadow transition-all">Purchase Ticket (3rd Class)</button>
                 <div id="fare-output" class="mt-6 hidden pt-4 border-t border-dashed border-gray-600">
                     <div class="text-4xl font-bold serif-font text-[#facc15]"><span id="fare-val">0.00</span> PHP</div>
                     <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-wide">Rate: 0.03 PHP/km • Valid for one passage</div>
@@ -265,54 +254,50 @@
 
     <!-- LOGIC ENGINE -->
     <script>
-        // --- ENHANCED STATION DATA ---
-        // Siding Rules: ~7 miles (11km). 
-        // Sub-terminals: Pototan, Passi, Dumarao (Wye, Ash Pit, Water, Storage).
-        
+        // --- DATA ---
         const stations = [
-            { name: "Iloilo City", km: 0.0, type: "Terminal", status: "Permanent", elev: 3, facilities: ["Roundhouse", "Machine Shops", "Wharf Tracks", "Water Tank"], siding: "Terminal Yard", notes: "Main Southern Terminus." },
-            { name: "La Paz", km: 2.6, type: "Station", status: "Permanent", elev: 4, facilities: ["General Offices", "Foundry", "Car Shops"], siding: "Yard", notes: "Operational HQ." },
-            { name: "High School", km: 3.4, type: "Stop", status: "Flag Stop", elev: 4, facilities: [], siding: "None", notes: "Student Halt." },
-            { name: "Jaro", km: 5.0, type: "Station", status: "Permanent", elev: 5, facilities: ["Loading Track"], siding: "10 Cars", notes: "Market hub." },
-            { name: "Central Phil. Univ.", km: 6.2, type: "Stop", status: "Flag Stop", elev: 6, facilities: [], siding: "None", notes: "School halt." },
-            { name: "Pavia", km: 11.1, type: "Station", status: "Permanent", elev: 8, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point (7 mi from HQ)." },
-            { name: "Santa Barbara", km: 16.5, type: "Station", status: "Permanent", elev: 10, facilities: ["Water Tank", "Siding"], siding: "20 Cars", notes: "Historic town." },
-            { name: "Cabilauan", km: 22.7, type: "Stop", status: "Flag Stop", elev: 12, facilities: [], siding: "None", notes: "Barrio halt." },
-            { name: "New Lucena", km: 25.8, type: "Station", status: "Permanent", elev: 14, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point." },
-            { name: "Camoncil", km: 28.1, type: "Stop", status: "Flag Stop", elev: 15, facilities: [], siding: "None", notes: "Rural halt." },
-            { name: "Pototan", km: 34.1, type: "Sub-Terminal", status: "Permanent", elev: 16, facilities: ["Wye ↩️", "Water Tank 💧", "Ash Pit", "Storage Tracks"], siding: "Yard (60 Cars)", notes: "MAJOR HUB: Sub-terminal operations." },
-            { name: "Abangay", km: 37.7, type: "Stop", status: "Flag Stop", elev: 18, facilities: [], siding: "None", notes: "Rural halt." },
-            { name: "Tabugon (Dingle)", km: 42.4, type: "Station", status: "Permanent", elev: 20, facilities: ["Loading Track"], siding: "10 Cars", notes: "Quarry access." },
-            { name: "Dueñas", km: 47.6, type: "Station", status: "Permanent", elev: 25, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point." },
-            { name: "Passi", km: 54.1, type: "Sub-Terminal", status: "Permanent", elev: 35, facilities: ["Concrete Engine House 🏠", "Wye ↩️", "Water Tank 💧", "Ash Pit"], siding: "Yard (80 Cars)", notes: "MAJOR HUB: Central Division Point." },
-            { name: "Ventura", km: 57.4, type: "Station", status: "Permanent", elev: 45, facilities: [], siding: "10 Cars", notes: "Scenic stop." },
-            { name: "Bagacay", km: 59.6, type: "Stop", status: "Flag Stop", elev: 55, facilities: [], siding: "None", notes: "Upland halt." },
-            { name: "Bitaogan", km: 62.4, type: "Stop", status: "Flag Stop", elev: 70, facilities: [], siding: "None", notes: "Halt." },
-            { name: "Santo Tomas", km: 64.7, type: "Stop", status: "Flag Stop", elev: 85, facilities: [], siding: "None", notes: "Halt." },
-            { name: "Summit", km: 66.8, type: "Stop", status: "Flag Stop", elev: 95, facilities: ["Siding"], siding: "15 Cars", notes: "Peak elevation safety siding." },
-            { name: "Dumarao", km: 72.2, type: "Sub-Terminal", status: "Permanent", elev: 85, facilities: ["Wye ↩️", "Water Tank 💧", "Ash Pit"], siding: "Yard (50 Cars)", notes: "MAJOR HUB: Hill section base." },
-            { name: "Alipasiauan", km: 76.7, type: "Stop", status: "Flag Stop", elev: 80, facilities: [], siding: "None", notes: "River halt." },
-            { name: "Buntog", km: 79.1, type: "Station", status: "Permanent", elev: 75, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point." },
-            { name: "San Juan", km: 80.1, type: "Stop", status: "Flag Stop", elev: 65, facilities: [], siding: "None", notes: "Halt." },
-            { name: "Cuartero", km: 83.5, type: "Station", status: "Permanent", elev: 40, facilities: ["Loading Track"], siding: "10 Cars", notes: "Corn center." },
-            { name: "Dao", km: 89.4, type: "Station", status: "Permanent", elev: 20, facilities: ["Passing Siding", "Intermodal Ramp"], siding: "40 Cars", notes: "Road junction hub." },
-            { name: "Km 93", km: 93.0, type: "Stop", status: "Flag Stop", elev: 18, facilities: ["Spur"], siding: "Spur", notes: "Sugar loading." },
-            { name: "Km 94", km: 94.0, type: "Stop", status: "Flag Stop", elev: 18, facilities: ["Spur"], siding: "Spur", notes: "Sugar loading." },
-            { name: "Lacaron", km: 96.2, type: "Stop", status: "Flag Stop", elev: 15, facilities: [], siding: "None", notes: "Halt." },
-            { name: "Calaan", km: 98.5, type: "Stop", status: "Flag Stop", elev: 12, facilities: [], siding: "None", notes: "Halt." },
-            { name: "Panitan", km: 102.9, type: "Station", status: "Permanent", elev: 10, facilities: ["Passing Siding", "Water Tank"], siding: "40 Cars", notes: "Sugar center." },
-            { name: "Loctugan", km: 109.3, type: "Station", status: "Permanent", elev: 6, facilities: [], siding: "10 Cars", notes: "Suburban." },
-            { name: "Capiz (Roxas)", km: 116.6, type: "Terminal", status: "Permanent", elev: 4, facilities: ["Roundhouse", "Wharf Tracks", "Water Tank"], siding: "Terminal Yard", notes: "Northern Terminus." }
+            { name: "Iloilo City", km: 0.0, type: "Terminal", status: "Permanent", elev: 3, facilities: ["Roundhouse", "Machine Shops", "Wharf Tracks", "Water Tank"], siding: "Terminal Yard", notes: "Main Southern Terminus.", staffTitle: "Station Superintendent", staffRole: "Port Logistics & Administration" },
+            { name: "La Paz", km: 2.6, type: "Station", status: "Permanent", elev: 4, facilities: ["General Offices", "Foundry", "Car Shops"], siding: "Yard", notes: "Operational HQ.", staffTitle: "Chief Clerk & Dispatcher", staffRole: "Network Control & Repairs" },
+            { name: "High School", km: 3.4, type: "Stop", status: "Flag Stop", elev: 4, facilities: [], siding: "None", notes: "Student Halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Jaro", km: 5.0, type: "Station", status: "Permanent", elev: 5, facilities: ["Loading Track"], siding: "10 Cars", notes: "Market hub.", staffTitle: "Station Master", staffRole: "Ticket Sales & Market Freight" },
+            { name: "Central Phil. Univ.", km: 6.2, type: "Stop", status: "Flag Stop", elev: 6, facilities: [], siding: "None", notes: "School halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Pavia", km: 11.1, type: "Station", status: "Permanent", elev: 8, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point.", staffTitle: "Station Master", staffRole: "Track Switching & Freight" },
+            { name: "Santa Barbara", km: 16.5, type: "Station", status: "Permanent", elev: 10, facilities: ["Water Tank", "Siding"], siding: "20 Cars", notes: "Historic town.", staffTitle: "Station Master", staffRole: "Passenger Services" },
+            { name: "Cabilauan", km: 22.7, type: "Stop", status: "Flag Stop", elev: 12, facilities: [], siding: "None", notes: "Barrio halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "New Lucena", km: 25.8, type: "Station", status: "Permanent", elev: 14, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Rice center.", staffTitle: "Station Master", staffRole: "Grain Loading Supervision" },
+            { name: "Camoncil", km: 28.1, type: "Stop", status: "Flag Stop", elev: 15, facilities: [], siding: "None", notes: "Rural halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Pototan", km: 34.1, type: "Sub-Terminal", status: "Permanent", elev: 16, facilities: ["Wye ↩️", "Water Tank 💧", "Ash Pit", "Storage Tracks"], siding: "Yard (60 Cars)", notes: "MAJOR HUB: Sub-terminal.", staffTitle: "Senior Station Master", staffRole: "Yard Control & Water/Coal" },
+            { name: "Abangay", km: 37.7, type: "Stop", status: "Flag Stop", elev: 18, facilities: [], siding: "None", notes: "Rural halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Tabugon (Dingle)", km: 42.4, type: "Station", status: "Permanent", elev: 20, facilities: ["Loading Track"], siding: "10 Cars", notes: "Quarry access.", staffTitle: "Station Master", staffRole: "Quarry Freight Management" },
+            { name: "Dueñas", km: 47.6, type: "Station", status: "Permanent", elev: 25, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Standard passing point.", staffTitle: "Station Master", staffRole: "Switching Operations" },
+            { name: "Passi", km: 54.1, type: "Sub-Terminal", status: "Permanent", elev: 35, facilities: ["Concrete Engine House 🏠", "Wye ↩️", "Water Tank 💧", "Ash Pit"], siding: "Yard (80 Cars)", notes: "MAJOR HUB: Crossing Point.", staffTitle: "Senior Station Master", staffRole: "Controls Train Meets (Staff System)" },
+            { name: "Ventura", km: 57.4, type: "Station", status: "Permanent", elev: 45, facilities: [], siding: "10 Cars", notes: "Scenic stop.", staffTitle: "Station Agent", staffRole: "Tourist Assistance" },
+            { name: "Bagacay", km: 59.6, type: "Stop", status: "Flag Stop", elev: 55, facilities: [], siding: "None", notes: "Upland halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Bitaogan", km: 62.4, type: "Stop", status: "Flag Stop", elev: 70, facilities: [], siding: "None", notes: "Halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Santo Tomas", km: 64.7, type: "Stop", status: "Flag Stop", elev: 85, facilities: [], siding: "None", notes: "Halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Summit", km: 66.8, type: "Stop", status: "Flag Stop", elev: 95, facilities: ["Siding"], siding: "15 Cars", notes: "Peak elevation safety siding.", staffTitle: "Conductor (On Board)", staffRole: "Brake Checks" },
+            { name: "Dumarao", km: 72.2, type: "Sub-Terminal", status: "Permanent", elev: 85, facilities: ["Wye ↩️", "Water Tank 💧", "Ash Pit"], siding: "Yard (50 Cars)", notes: "MAJOR HUB: Hill section.", staffTitle: "Senior Station Master", staffRole: "Helper Engine Management" },
+            { name: "Alipasiauan", km: 76.7, type: "Stop", status: "Flag Stop", elev: 80, facilities: [], siding: "None", notes: "River halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Buntog", km: 79.1, type: "Station", status: "Permanent", elev: 75, facilities: ["Passing Siding"], siding: "40 Cars", notes: "Tourist access.", staffTitle: "Station Master", staffRole: "Ticket Sales & Tourist Access" },
+            { name: "San Juan", km: 80.1, type: "Stop", status: "Flag Stop", elev: 65, facilities: [], siding: "None", notes: "Halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Cuartero", km: 83.5, type: "Station", status: "Permanent", elev: 40, facilities: ["Loading Track"], siding: "10 Cars", notes: "Corn center.", staffTitle: "Station Master", staffRole: "Agricultural Freight" },
+            { name: "Dao", km: 89.4, type: "Station", status: "Permanent", elev: 20, facilities: ["Passing Siding", "Intermodal Ramp"], siding: "40 Cars", notes: "Road junction hub.", staffTitle: "Station Master", staffRole: "Truck-to-Rail Transfer" },
+            { name: "Km 93", km: 93.0, type: "Stop", status: "Flag Stop", elev: 18, facilities: ["Spur"], siding: "Spur", notes: "Sugar loading.", staffTitle: "Conductor (On Board)", staffRole: "Freight Pickup" },
+            { name: "Km 94", km: 94.0, type: "Stop", status: "Flag Stop", elev: 18, facilities: ["Spur"], siding: "Spur", notes: "Sugar loading.", staffTitle: "Conductor (On Board)", staffRole: "Freight Pickup" },
+            { name: "Lacaron", km: 96.2, type: "Stop", status: "Flag Stop", elev: 15, facilities: [], siding: "None", notes: "Halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Calaan", km: 98.5, type: "Stop", status: "Flag Stop", elev: 12, facilities: [], siding: "None", notes: "Halt.", staffTitle: "Conductor (On Board)", staffRole: "Collects Fares on Train" },
+            { name: "Panitan", km: 102.9, type: "Station", status: "Permanent", elev: 10, facilities: ["Passing Siding", "Water Tank"], siding: "40 Cars", notes: "Sugar center.", staffTitle: "Station Master", staffRole: "Bridge Security & Sugar Loading" },
+            { name: "Loctugan", km: 109.3, type: "Station", status: "Permanent", elev: 6, facilities: [], siding: "10 Cars", notes: "Suburban.", staffTitle: "Station Master", staffRole: "Commuter Tickets" },
+            { name: "Capiz (Roxas)", km: 116.6, type: "Terminal", status: "Permanent", elev: 4, facilities: ["Roundhouse", "Wharf Tracks", "Water Tank"], siding: "Terminal Yard", notes: "Northern Terminus.", staffTitle: "Station Superintendent", staffRole: "Northern Division Ops" }
         ];
 
-        // --- DOM REFERENCES ---
+        // --- DOM & STATE ---
         const listContainer = document.getElementById('station-list');
         const inspectorView = document.getElementById('view-inspector');
         const timetableView = document.getElementById('view-timetable');
         const btnInspector = document.getElementById('btn-inspector');
         const btnTimetable = document.getElementById('btn-timetable');
 
-        // --- STATE & VIEW LOGIC ---
         function switchView(mode) {
             if (mode === 'inspector') {
                 inspectorView.classList.remove('hidden');
@@ -336,17 +321,14 @@
             else { active.classList.remove('rounded-l-lg'); inactive.classList.remove('rounded-r-lg'); }
         }
 
-        // --- RENDER FUNCTIONS ---
         function renderStationList() {
             listContainer.innerHTML = '';
             stations.forEach((s, idx) => {
                 const div = document.createElement('div');
                 let dotClass = s.type.includes('Terminal') ? 'bg-[#c2410c]' : (s.status === 'Flag Stop' ? 'bg-white border-2 border-[#57534e]' : 'bg-[#2d2a26]');
-                
                 div.className = `flex items-center gap-3 cursor-pointer p-2 rounded-md station-node-container group ${idx===0 ? 'active':''}`;
                 div.id = `node-${idx}`;
                 div.onclick = () => loadInspector(idx);
-
                 div.innerHTML = `
                     <div class="relative z-10 w-3 h-3 rounded-full flex-shrink-0 station-marker ${dotClass}"></div>
                     <div class="flex justify-between w-full items-baseline">
@@ -356,7 +338,7 @@
                 `;
                 listContainer.appendChild(div);
             });
-            loadInspector(0); // Init first
+            loadInspector(0);
         }
 
         function loadInspector(idx) {
@@ -369,7 +351,17 @@
             document.getElementById('dt-desc').innerText = s.notes;
             document.getElementById('dt-type').innerText = s.type;
             document.getElementById('dt-siding').innerText = s.siding;
-            document.getElementById('dt-status').innerText = s.type; 
+            document.getElementById('dt-status').innerText = s.type;
+            
+            // Staff Update
+            document.getElementById('dt-staff-title').innerText = s.staffTitle;
+            document.getElementById('dt-staff-role').innerText = s.staffRole;
+
+            // Ticket Update
+            const ticketVal = (s.status === 'Permanent' || s.type.includes('Terminal')) ? "Station Window" : "Pay Conductor";
+            const ticketEl = document.getElementById('dt-ticket');
+            ticketEl.innerText = ticketVal;
+            ticketEl.className = (s.status === 'Permanent' || s.type.includes('Terminal')) ? "staff-badge border-[#c2410c] text-white bg-[#2d2a26]" : "staff-badge border-gray-400 text-gray-500 bg-white";
 
             const facList = document.getElementById('dt-facilities');
             facList.innerHTML = '';
@@ -385,18 +377,13 @@
             }
         }
 
-        // --- TIMETABLE ENGINE ---
+        // --- TIMETABLE ---
         function generateTimetable() {
             const tbody = document.getElementById('timetable-body');
             tbody.innerHTML = '';
-
-            const START_NB = 7 * 60; 
-            const START_SB = 7 * 60;
-            const SPEED_FLAT = 2.45;
-            const SPEED_GRADE = 2.8;
-            const PASSI_KM = 54.1;
-            const MEET_DEPARTURE = 585; 
-            const WATER_DWELL = 7;
+            const START_NB = 7 * 60, START_SB = 7 * 60;
+            const SPEED_FLAT = 2.45, SPEED_GRADE = 2.8;
+            const PASSI_KM = 54.1, MEET_DEPARTURE = 585, WATER_DWELL = 7;
             const waterStops = ["Pototan", "Dumarao"];
 
             let nb_schedule = [];
@@ -407,13 +394,10 @@
                 const s = stations[i];
                 if(i > 0) {
                     const dist = s.km - stations[i-1].km;
-                    const speed = (s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT;
-                    t_nb += (dist * speed);
+                    t_nb += (dist * ((s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT));
                 }
                 if(waterStops.includes(s.name)) t_nb += WATER_DWELL;
-                if(s.name === "Passi") {
-                    if(t_nb < MEET_DEPARTURE) t_nb = MEET_DEPARTURE; 
-                }
+                if(s.name === "Passi") if(t_nb < MEET_DEPARTURE) t_nb = MEET_DEPARTURE; 
                 nb_schedule.push(t_nb);
             }
 
@@ -422,13 +406,10 @@
                 const s = stations[i];
                 if(i < stations.length-1) {
                     const dist = stations[i+1].km - s.km;
-                    const speed = (s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT;
-                    t_sb += (dist * speed);
+                    t_sb += (dist * ((s.km > 54 && s.km < 72) ? SPEED_GRADE : SPEED_FLAT));
                 }
                 if(waterStops.includes(s.name)) t_sb += WATER_DWELL;
-                if(s.name === "Passi") {
-                    if(t_sb < MEET_DEPARTURE) t_sb = MEET_DEPARTURE;
-                }
+                if(s.name === "Passi") if(t_sb < MEET_DEPARTURE) t_sb = MEET_DEPARTURE;
                 sb_times_map[i] = t_sb;
             }
 
@@ -436,7 +417,6 @@
                 const tr = document.createElement('tr');
                 const isWater = waterStops.includes(s.name);
                 const isPassi = s.name === "Passi";
-                
                 if(isWater) tr.classList.add('water-stop-row');
                 if(isPassi) tr.classList.add('crossing-highlight');
 
@@ -446,14 +426,11 @@
                     const m = Math.floor(adj%60);
                     return `${h>12?h-12:(h===0?12:h)}:${m.toString().padStart(2,'0')}`;
                 }
-
                 const flag = s.status === 'Flag Stop' ? '<span class="text-gray-400 italic mr-1">f</span>' : '';
                 const icon = isWater ? '💧 ' : (isPassi ? '⚔ ' : '');
 
                 tr.innerHTML = `
-                    <td class="p-3 ${isPassi||isWater ? 'font-bold text-[#2d2a26]' : 'text-[#2d2a26]'} border-r border-gray-300">
-                        ${s.name}
-                    </td>
+                    <td class="p-3 ${isPassi||isWater ? 'font-bold text-[#2d2a26]' : 'text-[#2d2a26]'} border-r border-gray-300">${s.name}</td>
                     <td class="p-2 text-center bg-[#f9f7f2] border-r border-gray-300">${flag}${icon}${timeStr(nb_schedule[i], false)}</td>
                     <td class="p-2 text-center bg-[#f9f7f2] border-r border-gray-300">${flag}${icon}${timeStr(nb_schedule[i], true)}</td>
                     <td class="p-2 text-center bg-white border-r border-gray-300 border-l-4 border-double">${flag}${icon}${timeStr(sb_times_map[i], false)}</td>
@@ -463,21 +440,13 @@
             });
         }
 
-        // --- CHART INIT ---
+        // --- CHARTS & CALC ---
         function initCharts() {
             new Chart(document.getElementById('elevationChart'), {
                 type: 'line',
                 data: {
                     labels: stations.map(s => s.km),
-                    datasets: [{
-                        label: 'Elevation (m)',
-                        data: stations.map(s => s.elev),
-                        borderColor: '#2d2a26',
-                        backgroundColor: 'rgba(194, 65, 12, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
+                    datasets: [{ label: 'Elevation', data: stations.map(s => s.elev), borderColor: '#2d2a26', backgroundColor: 'rgba(194, 65, 12, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: true } } }
             });
@@ -493,48 +462,29 @@
                 type: 'bar',
                 data: {
                     labels: ['Passing Sidings', 'Water Stops', 'Sub-Terminals'],
-                    datasets: [{
-                        label: 'Assets',
-                        data: [facCounts.Siding, facCounts.Water, facCounts.Hub],
-                        backgroundColor: ['#2d2a26', '#3b82f6', '#c2410c']
-                    }]
+                    datasets: [{ label: 'Assets', data: [facCounts.Siding, facCounts.Water, facCounts.Hub], backgroundColor: ['#2d2a26', '#3b82f6', '#c2410c'] }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
-        
-        // --- CALCULATOR LOGIC (RESTORED) ---
+
         function initCalculator() {
             const origin = document.getElementById('calc-origin');
             const dest = document.getElementById('calc-dest');
-            
             stations.forEach((s, i) => {
                 origin.add(new Option(s.name, i));
                 dest.add(new Option(s.name, i));
             });
-            
-            // Set defaults to ends of the line
             dest.value = stations.length - 1; 
-
             document.getElementById('calc-btn').addEventListener('click', () => {
                 const i1 = parseInt(origin.value);
                 const i2 = parseInt(dest.value);
-                
-                const s1 = stations[i1];
-                const s2 = stations[i2];
-                
-                const dist = Math.abs(s1.km - s2.km);
-                const fare = (dist * 0.03).toFixed(2);
-                
-                const resultBox = document.getElementById('fare-output');
-                const fareVal = document.getElementById('fare-val');
-                
-                fareVal.innerText = fare;
-                resultBox.classList.remove('hidden');
+                const dist = Math.abs(stations[i1].km - stations[i2].km);
+                document.getElementById('fare-val').innerText = (dist * 0.03).toFixed(2);
+                document.getElementById('fare-output').classList.remove('hidden');
             });
         }
 
-        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             renderStationList();
             generateTimetable();
